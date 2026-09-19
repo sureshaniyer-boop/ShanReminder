@@ -36,148 +36,216 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final pages = [_dashboard(), _calendar(), _allTasks(), SettingsScreen(themeName: widget.themeName, onThemeChanged: widget.onThemeChanged)];
+    final pages = [_dashboard(), _calendar(), _allTasks(),
+      SettingsScreen(themeName: widget.themeName, onThemeChanged: widget.onThemeChanged)];
+    final todayHasTasks = widget.tasks.any((t) => _sameDay(t.dueAt, DateTime.now()));
     return Scaffold(
-      appBar: _index == 0 ? null : AppBar(title: Text(['Home', 'Calendar', 'Tasks', 'Settings'][_index])),
+      appBar: _index == 0 ? null : AppBar(
+        title: Text(['Home', 'Calendar', 'Tasks', 'Settings'][_index])),
       body: SafeArea(top: _index != 0, bottom: false, child: pages[_index]),
-      floatingActionButton: _index == 3 ? null : FloatingActionButton(tooltip: 'Add task', onPressed: _addTask, child: const Icon(Icons.add, size: 30)),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _index,
-        onDestinationSelected: (v) => setState(() => _index = v),
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'Home'),
-          NavigationDestination(icon: Icon(Icons.calendar_month_outlined), selectedIcon: Icon(Icons.calendar_month), label: 'Calendar'),
-          NavigationDestination(icon: Icon(Icons.list_alt_outlined), selectedIcon: Icon(Icons.list_alt), label: 'Tasks'),
-          NavigationDestination(icon: Icon(Icons.settings_outlined), selectedIcon: Icon(Icons.settings), label: 'Settings'),
-        ],
-      ),
+      floatingActionButton: _index == 3 || (_index == 0 && !todayHasTasks)
+        ? null : FloatingActionButton(
+          tooltip: 'Add task', onPressed: _addTask,
+          child: const Icon(Icons.add_rounded, size: 28)),
+      bottomNavigationBar: _navigation(),
+    );
+  }
+
+  Widget _navigation() {
+    const labels = ['Home', 'Calendar', 'Tasks', 'Settings'];
+    const icons = [Icons.home_outlined, Icons.calendar_month_outlined,
+      Icons.checklist_rounded, Icons.settings_outlined];
+    final primary = Theme.of(context).colorScheme.primary;
+    return Container(
+      decoration: const BoxDecoration(color: Colors.white,
+        border: Border(top: BorderSide(color: AppTheme.border))),
+      child: SafeArea(top: false, child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Row(children: List.generate(4, (index) {
+          final selected = _index == index;
+          return Expanded(child: Semantics(
+            selected: selected, button: true,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(14),
+              onTap: () => setState(() => _index = index),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Column(mainAxisSize: MainAxisSize.min, children: [
+                  Icon(icons[index], size: 22,
+                    color: selected ? primary : AppTheme.muted),
+                  const SizedBox(height: 5),
+                  Text(labels[index], textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 10, height: 1.2,
+                      fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                      color: selected ? primary : AppTheme.muted)),
+                  const SizedBox(height: 5),
+                  Container(width: 4, height: 4, decoration: BoxDecoration(
+                    color: selected ? primary : Colors.transparent,
+                    shape: BoxShape.circle)),
+                ]),
+              ),
+            ),
+          ));
+        })),
+      )),
     );
   }
 
   Widget _dashboard() {
     final now = DateTime.now();
-    final today = widget.tasks.where((t) => _sameDay(t.dueAt, now)).toList()..sort((a,b)=>a.dueAt.compareTo(b.dueAt));
+    final today = widget.tasks.where((t) => _sameDay(t.dueAt, now)).toList()
+      ..sort((a,b) => a.dueAt.compareTo(b.dueAt));
     final completed = today.where((t) => t.completed).length;
     final overdue = widget.tasks.where((t) => !t.completed && t.dueAt.isBefore(now)).length;
     final primary = Theme.of(context).colorScheme.primary;
-    final stats = [
-      _stat('Tasks', today.length, primary, primary.withValues(alpha: 0.08)),
-      _stat('Completed', completed, const Color(0xFF216347), const Color(0xFFE8F5EC)),
-      _stat('Pending', today.length - completed, const Color(0xFF896014), const Color(0xFFFFF4D9)),
-      _stat('Overdue', overdue, const Color(0xFFAA3544), const Color(0xFFFCEBEC)),
-    ];
-    return CustomScrollView(
-      slivers: [
-        SliverToBoxAdapter(
-          child: BrandHeader(
-            themeName: widget.themeName,
-            onSettings: () => setState(() => _index = 3),
-          ),
-        ),
-        SliverToBoxAdapter(
-          child: Container(
-            decoration: const BoxDecoration(
-              color: AppTheme.paper,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-            ),
-            padding: const EdgeInsets.fromLTRB(20, 24, 20, 100),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+    return SingleChildScrollView(child: Column(children: [
+      BrandHeader(themeName: widget.themeName,
+        onSettings: () => setState(() => _index = 3)),
+      Transform.translate(
+        offset: const Offset(0, -24),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 60),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white, borderRadius: BorderRadius.circular(22),
+                border: Border.all(color: AppTheme.border),
+                boxShadow: [BoxShadow(
+                  color: primary.withValues(alpha: 0.055),
+                  blurRadius: 24, offset: const Offset(0, 8))],
+              ),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Row(children: [
-                  Expanded(child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Today', style: TextStyle(color: AppTheme.muted, fontSize: 13)),
-                      const SizedBox(height: 4),
-                      Text(DateFormat('EEE, d MMMM yyyy').format(now),
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
-                    ],
-                  )),
-                  const SizedBox(width: 8),
-                  IconButton.filledTonal(
+                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    const Text('YOUR DAY AT A GLANCE', style: TextStyle(
+                      fontSize: 9, letterSpacing: 1.3,
+                      fontWeight: FontWeight.w500, color: AppTheme.muted)),
+                    const SizedBox(height: 7),
+                    Text(DateFormat('EEEE, d MMM').format(now),
+                      style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w500,
+                        letterSpacing: -0.5)),
+                  ])),
+                  IconButton(
                     tooltip: 'View upcoming tasks',
                     onPressed: () => setState(() => _index = 1),
-                    icon: const Icon(Icons.event_available_outlined),
-                  ),
+                    icon: Icon(Icons.calendar_today_outlined, size: 19, color: primary)),
                 ]),
-                const SizedBox(height: 20),
+                const SizedBox(height: 16),
                 LayoutBuilder(builder: (context, constraints) {
-                  final columns = constraints.maxWidth < 300 ||
-                      MediaQuery.textScalerOf(context).scale(12) > 16 ? 2 : 4;
-                  return Wrap(
-                    spacing: 8, runSpacing: 8,
+                  final columns = constraints.maxWidth < 280 ||
+                    MediaQuery.textScalerOf(context).scale(12) > 16 ? 2 : 4;
+                  final stats = [
+                    _stat('Tasks', today.length, primary),
+                    _stat('Completed', completed, const Color(0xFF397158)),
+                    _stat('Pending', today.length - completed, const Color(0xFF966C22)),
+                    _stat('Overdue', overdue, const Color(0xFFAE5060)),
+                  ];
+                  return Wrap(spacing: 8, runSpacing: 16,
                     children: stats.map((stat) => SizedBox(
                       width: (constraints.maxWidth - 8 * (columns - 1)) / columns,
-                      child: stat,
-                    )).toList(),
-                  );
+                      child: stat)).toList());
                 }),
-                const SizedBox(height: 26),
-                Row(children: [
-                  const Expanded(child: Text("Today's Tasks",
-                    style: TextStyle(fontSize: 21, fontWeight: FontWeight.w700))),
-                  TextButton(
-                    onPressed: () => setState(() => _index = 2),
-                    child: const Text('View all ›'),
-                  ),
-                ]),
-                const SizedBox(height: 6),
-                if (today.isEmpty) _emptyToday()
-                else ...today.map((task) => TaskTile(
-                  task: task, onChanged: (v) => widget.onToggle(task, v ?? false))),
-              ],
+                const SizedBox(height: 18),
+                ClipRRect(borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: today.isEmpty ? 0 : completed / today.length,
+                    minHeight: 4, color: primary,
+                    backgroundColor: const Color(0xFFF0EEE8),
+                    semanticsLabel: 'Today’s task completion',
+                    semanticsValue: today.isEmpty ? 'No tasks today'
+                      : '$completed of ${today.length} completed')),
+                const SizedBox(height: 9),
+                Text(today.isEmpty ? 'A fresh start, at your own pace.'
+                    : '$completed of ${today.length} tasks completed today',
+                  style: const TextStyle(fontSize: 11, color: AppTheme.muted)),
+              ]),
             ),
-          ),
+            const SizedBox(height: 24),
+            Row(children: [
+              const Expanded(child: Text("Today's tasks",
+                style: TextStyle(fontSize: 19, fontWeight: FontWeight.w500,
+                  letterSpacing: -0.4))),
+              TextButton(onPressed: () => setState(() => _index = 2),
+                child: const Text('View all  →', style: TextStyle(fontSize: 12))),
+            ]),
+            const SizedBox(height: 8),
+            if (today.isEmpty) _emptyToday()
+            else ...today.map((task) => TaskTile(
+              task: task, onChanged: (v) => widget.onToggle(task, v ?? false))),
+            const SizedBox(height: 22),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF3EFE5),
+                borderRadius: BorderRadius.circular(16)),
+              child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                const Icon(Icons.format_quote_rounded, size: 22, color: Color(0xFF977539)),
+                const SizedBox(width: 10),
+                const Expanded(child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text('A focused mind creates a brighter future.',
+                      style: TextStyle(fontSize: 13, height: 1.5,
+                        fontStyle: FontStyle.italic, color: Color(0xFF685637))),
+                    SizedBox(height: 6),
+                    Text('— Shri Kashi Sureshan Iyer',
+                      style: TextStyle(fontSize: 10, height: 1.4, color: Color(0xFF786747))),
+                  ])),
+              ]),
+            ),
+          ]),
         ),
-      ],
+      ),
+    ]));
+  }
+
+  Widget _emptyToday() {
+    final primary = Theme.of(context).colorScheme.primary;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(22, 22, 22, 22),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppTheme.border)),
+      child: Column(children: [
+        SizedBox(height: 70, width: 100,
+          child: CustomPaint(painter: _PlannerIllustration(primary))),
+        const SizedBox(height: 13),
+        const Text('A little space for possibility.',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w500, letterSpacing: -0.3)),
+        const SizedBox(height: 7),
+        const Text('Start with one thing that matters today.',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 12, color: AppTheme.muted, height: 1.5)),
+        const SizedBox(height: 19),
+        SizedBox(width: double.infinity, child: FilledButton.icon(
+          onPressed: _addTask,
+          style: FilledButton.styleFrom(
+            minimumSize: const Size(0, 48),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14)),
+          icon: const Icon(Icons.add_rounded, size: 18),
+          label: const Text('Plan my first task',
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500)))),
+      ]),
     );
   }
 
-  Widget _emptyToday() => Container(
-    width: double.infinity,
-    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 30),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(20),
-      border: Border.all(color: AppTheme.border),
-    ),
-    child: Column(children: [
-      Container(
-        padding: const EdgeInsets.all(17),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.07),
-          shape: BoxShape.circle,
-        ),
-        child: Icon(Icons.event_note_outlined, size: 32,
-          color: Theme.of(context).colorScheme.primary),
-      ),
-      const SizedBox(height: 18),
-      const Text('Make room for what matters',
-        textAlign: TextAlign.center,
-        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
-      const SizedBox(height: 8),
-      const Text('Your day is a fresh page. Add a task and let ShanReminder keep you on track.',
-        textAlign: TextAlign.center,
-        style: TextStyle(color: AppTheme.muted, height: 1.5)),
-      const SizedBox(height: 20),
-      FilledButton.icon(
-        onPressed: _addTask,
-        icon: const Icon(Icons.add, size: 20),
-        label: const Text('Add your first task'),
-      ),
-    ]),
-  );
-
-  Widget _stat(String label, int value, Color foreground, Color background) => Container(
-    padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 4),
-    decoration: BoxDecoration(color: background, borderRadius: BorderRadius.circular(13)),
-    child: Column(children: [
-      Text('$value', style: TextStyle(color: foreground, fontSize: 27, fontWeight: FontWeight.w700)),
-      const SizedBox(height: 4),
-      Text(label, textAlign: TextAlign.center,
-        style: TextStyle(color: foreground, fontSize: 11, fontWeight: FontWeight.w500)),
-    ]),
+  Widget _stat(String label, int value, Color color) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Row(children: [
+        Container(width: 5, height: 5, decoration: BoxDecoration(
+          color: color, shape: BoxShape.circle)),
+        const SizedBox(width: 7),
+        Flexible(child: Text('$value', style: const TextStyle(
+          fontSize: 25, height: 1.2, fontWeight: FontWeight.w400, color: AppTheme.ink))),
+      ]),
+      const SizedBox(height: 5),
+      Text(label, style: const TextStyle(fontSize: 10, color: AppTheme.muted)),
+    ],
   );
 
   Widget _allTasks() {
@@ -200,4 +268,43 @@ class _HomeScreenState extends State<HomeScreen> {
     final task = await Navigator.push<TaskItem>(context, MaterialPageRoute(builder: (_) => const AddTaskScreen()));
     if (task != null) await widget.onAdd(task);
   }
+}
+
+class _PlannerIllustration extends CustomPainter {
+  final Color primary;
+  _PlannerIllustration(this.primary);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.save();
+    canvas.scale(size.width / 100, size.height / 70);
+    final fill = Paint()..color = primary.withValues(alpha: 0.055);
+    canvas.drawCircle(const Offset(50, 35), 33, fill);
+    canvas.save();
+    canvas.translate(50, 35);
+    canvas.rotate(-0.10);
+    final paper = RRect.fromRectAndRadius(
+      const Rect.fromLTWH(-21, -26, 42, 52), const Radius.circular(6));
+    canvas.drawRRect(paper, Paint()..color = Colors.white);
+    canvas.drawRRect(paper, Paint()..color = primary.withValues(alpha: 0.35)
+      ..style = PaintingStyle.stroke..strokeWidth = 1.2);
+    final line = Paint()..color = primary.withValues(alpha: 0.4)
+      ..strokeWidth = 1.5..strokeCap = StrokeCap.round;
+    for (final y in [-9.0, 2.0, 13.0]) {
+      canvas.drawCircle(Offset(-11, y), 2, line);
+      canvas.drawLine(Offset(-3, y), Offset(12, y), line);
+    }
+    canvas.drawLine(const Offset(-9,-29), const Offset(-9,-21), line);
+    canvas.drawLine(const Offset(9,-29), const Offset(9,-21), line);
+    canvas.restore();
+    final gold = Paint()..color = const Color(0xFFB69A59)..strokeWidth = 1.5
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(const Offset(82,11), const Offset(82,19), gold);
+    canvas.drawLine(const Offset(78,15), const Offset(86,15), gold);
+    canvas.drawCircle(const Offset(16,51), 2, gold);
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant _PlannerIllustration oldDelegate) => primary != oldDelegate.primary;
 }

@@ -33,6 +33,7 @@ jobs:
           rm -rf build_app/lib
           rm -rf build_app/test
           cp -R /tmp/shan_source/lib build_app/lib
+          cp -R test build_app/test
           cp /tmp/shan_source/pubspec.yaml build_app/pubspec.yaml
           cp /tmp/shan_source/AndroidManifest.xml build_app/android/app/src/main/AndroidManifest.xml
           python3 - <<'PY'
@@ -57,6 +58,18 @@ jobs:
         working-directory: build_app
         run: flutter analyze --no-fatal-infos
 
+      - name: Check home layouts and generate previews
+        working-directory: build_app
+        run: flutter test --update-goldens test/home_layout_test.dart
+
+      - name: Upload home previews
+        uses: actions/upload-artifact@v4
+        with:
+          name: ShanReminder-Home-Previews
+          path: build_app/test/previews/*.png
+          if-no-files-found: error
+          retention-days: 30
+
       - name: Build release APK
         working-directory: build_app
         run: flutter build apk --release
@@ -64,7 +77,7 @@ jobs:
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ShanReminder-V1-Android-APK
+          name: ShanReminder-v1.2-Android-APK
           path: build_app/build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
           retention-days: 30

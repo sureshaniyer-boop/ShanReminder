@@ -11,62 +11,49 @@ class BrandHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final cream = themeName == 'Cream';
     final base = AppTheme.themeColors[themeName] ?? AppTheme.themeColors['Maroon']!;
-    final accent = cream ? const Color(0xFF875915) : AppTheme.gold;
+    final gold = cream ? const Color(0xFF785119) : AppTheme.gold;
+    final foreground = cream ? const Color(0xFF44341E) : const Color(0xFFFFFBEE);
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: cream ? SystemUiOverlayStyle.dark : SystemUiOverlayStyle.light,
       child: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft, end: Alignment.bottomRight,
-            colors: cream
-                ? [const Color(0xFFFFFCF3), base]
-                : [Color.lerp(base, Colors.white, 0.08)!, Color.lerp(base, Colors.black, 0.3)!],
-          ),
-        ),
-        child: SafeArea(
-          bottom: false,
-          child: Stack(children: [
-            Positioned(right: -15, bottom: 10,
-              child: Opacity(opacity: 0.08,
-                child: LotusMark(color: accent, size: 125))),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(22, 24, 14, 28),
-              child: Column(children: [
-                Row(children: [
-                  LotusMark(color: accent, size: 48),
-                  const SizedBox(width: 12),
-                  Expanded(child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('ShanReminder', style: TextStyle(
-                        color: accent, fontSize: 24, fontWeight: FontWeight.w600,
-                        letterSpacing: -0.6)),
-                      const SizedBox(height: 5),
-                      Text('Plan Today • Achieve Tomorrow',
-                        style: TextStyle(color: accent, fontSize: 11, height: 1.4)),
-                    ],
-                  )),
-                  IconButton(
-                    tooltip: 'Appearance and settings',
-                    onPressed: onSettings,
-                    icon: Icon(Icons.settings_outlined, color: accent, size: 22),
-                  ),
-                ]),
-                const SizedBox(height: 19),
-                Divider(color: accent.withValues(alpha: 0.3), height: 1),
-                const SizedBox(height: 17),
-                Text('“A focused mind creates a brighter future.”',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: accent, fontFamily: 'serif',
-                    fontStyle: FontStyle.italic, fontSize: 16, height: 1.5)),
-                const SizedBox(height: 5),
-                Text('— Shri Kashi Sureshan Iyer',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: accent, fontSize: 11, height: 1.5)),
+        decoration: BoxDecoration(gradient: LinearGradient(
+          begin: Alignment.topLeft, end: Alignment.bottomRight,
+          colors: cream ? [const Color(0xFFFBF4E5), base]
+            : [base, Color.lerp(base, Colors.black, 0.42)!],
+        )),
+        child: SafeArea(bottom: false, child: Stack(children: [
+          Positioned(right: -20, bottom: 20, child: Opacity(
+            opacity: 0.065, child: LotusMark(color: gold, size: 175))),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 16, 20, 48),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Row(children: [
+                LotusMark(color: gold, size: 32),
+                const SizedBox(width: 10),
+                Expanded(child: Text('ShanReminder', style: TextStyle(
+                  fontSize: 18, fontWeight: FontWeight.w500, color: gold,
+                  letterSpacing: -0.3))),
+                IconButton(
+                  tooltip: 'Appearance and settings', onPressed: onSettings,
+                  style: IconButton.styleFrom(
+                    side: BorderSide(color: gold.withValues(alpha: 0.22)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
+                  icon: Icon(Icons.tune_rounded, size: 19, color: gold)),
               ]),
-            ),
-          ]),
-        ),
+              const SizedBox(height: 22),
+              Text('PLAN TODAY · ACHIEVE TOMORROW', style: TextStyle(
+                fontSize: 9, fontWeight: FontWeight.w500,
+                letterSpacing: 1.5, color: gold)),
+              const SizedBox(height: 9),
+              Text('Make today meaningful.', style: TextStyle(
+                fontSize: 28, height: 1.15, fontWeight: FontWeight.w400,
+                letterSpacing: -0.8, color: foreground)),
+              const SizedBox(height: 9),
+              Text('A little focus. A brighter future.', style: TextStyle(
+                fontSize: 12, height: 1.4, color: foreground.withValues(alpha: 0.78))),
+            ]),
+          ),
+        ])),
       ),
     );
   }
