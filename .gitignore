@@ -8,3 +8,10 @@ build/
 .vscode/
 *.iml
 .DS_Store
+
+# Never commit signing identities or credentials
+*.p12
+*.jks
+*.keystore
+key.properties
+
