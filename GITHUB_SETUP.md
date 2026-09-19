@@ -22,3 +22,5 @@ When the run completes, open the workflow run and download the artifact named:
 `ShanReminder-V1-Android-APK`
 
 The artifact contains the Android APK for testing.
+
+> GitHub Actions is configured to run on pushes to `main` and can also be started manually with **Run workflow**.
