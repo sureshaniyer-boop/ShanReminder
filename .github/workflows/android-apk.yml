@@ -31,6 +31,7 @@ jobs:
           cp android/app/src/main/AndroidManifest.xml /tmp/shan_source/AndroidManifest.xml
           flutter create --platforms=android --org com.shanreminder --project-name shan_reminder build_app
           rm -rf build_app/lib
+          rm -rf build_app/test
           cp -R /tmp/shan_source/lib build_app/lib
           cp /tmp/shan_source/pubspec.yaml build_app/pubspec.yaml
           cp /tmp/shan_source/AndroidManifest.xml build_app/android/app/src/main/AndroidManifest.xml
