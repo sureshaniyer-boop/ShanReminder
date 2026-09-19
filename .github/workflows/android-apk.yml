@@ -1,0 +1,56 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Show Flutter version
+        run: flutter --version
+
+      - name: Create Android project shell
+        run: |
+          mkdir -p /tmp/shan_source
+          cp -R lib /tmp/shan_source/lib
+          cp pubspec.yaml /tmp/shan_source/pubspec.yaml
+          cp android/app/src/main/AndroidManifest.xml /tmp/shan_source/AndroidManifest.xml
+          flutter create --platforms=android --org com.shanreminder --project-name shan_reminder build_app
+          rm -rf build_app/lib
+          cp -R /tmp/shan_source/lib build_app/lib
+          cp /tmp/shan_source/pubspec.yaml build_app/pubspec.yaml
+          cp /tmp/shan_source/AndroidManifest.xml build_app/android/app/src/main/AndroidManifest.xml
+
+      - name: Install dependencies
+        working-directory: build_app
+        run: flutter pub get
+
+      - name: Analyze
+        working-directory: build_app
+        run: flutter analyze
+
+      - name: Build release APK
+        working-directory: build_app
+        run: flutter build apk --release
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ShanReminder-V1-Android-APK
+          path: build_app/build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
+          retention-days: 30
