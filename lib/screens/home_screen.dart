@@ -152,9 +152,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     value: today.isEmpty ? 0 : completed / today.length,
                     minHeight: 4, color: primary,
                     backgroundColor: const Color(0xFFF0EEE8),
-                    semanticsLabel: 'Today’s task completion',
-                    semanticsValue: today.isEmpty ? 'No tasks today'
-                      : '$completed of ${today.length} completed')),
+                    semanticsLabel: today.isEmpty ? 'No tasks today' : 'Today’s task completion')),
                 const SizedBox(height: 9),
                 Text(today.isEmpty ? 'A fresh start, at your own pace.'
                     : '$completed of ${today.length} tasks completed today',

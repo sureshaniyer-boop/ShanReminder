@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -47,7 +46,7 @@ void main() {
             textScaler: TextScaler.linear(scale), padding: const EdgeInsets.only(top: 24)),
           child: child!),
         home: HomeScreen(tasks: tasks, themeName: theme,
-          onAdd: (_) async {}, onToggle: (_, __) async {},
+          onAdd: (_) async {}, onToggle: (_, _) async {},
           onDelete: (_) async {}, onThemeChanged: (_) {}),
       ),
     ));
