@@ -35,6 +35,19 @@ jobs:
           cp -R /tmp/shan_source/lib build_app/lib
           cp /tmp/shan_source/pubspec.yaml build_app/pubspec.yaml
           cp /tmp/shan_source/AndroidManifest.xml build_app/android/app/src/main/AndroidManifest.xml
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("build_app/android/app/build.gradle.kts")
+          text = p.read_text()
+          text = text.replace(
+              "compileOptions {\n",
+              "compileOptions {\n        isCoreLibraryDesugaringEnabled = true\n",
+              1,
+          )
+          if 'coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")' not in text:
+              text += '\n\ndependencies {\n    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")\n}\n'
+          p.write_text(text)
+          PY
 
       - name: Install dependencies
         working-directory: build_app
