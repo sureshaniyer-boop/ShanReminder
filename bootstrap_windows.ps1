@@ -1,0 +1,6 @@
+Write-Host "ShanReminder V1 bootstrap"
+Write-Host "1) Ensure Flutter is installed and available in PATH."
+Write-Host "2) From the parent folder run: flutter create --org com.shanreminder shan_reminder_app"
+Write-Host "3) Copy this package's lib folder and pubspec.yaml into shan_reminder_app."
+Write-Host "4) Copy/merge the included AndroidManifest.xml."
+Write-Host "5) Run: flutter pub get; flutter run"
