@@ -8,6 +8,9 @@ import 'package:shan_reminder/theme/app_theme.dart';
 
 void main() {
   setUpAll(() async {
+    final icons = FontLoader('MaterialIcons')
+      ..addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf'));
+    await icons.load();
     final root = Platform.environment['FLUTTER_ROOT'];
     if (root != null) {
       final font = File('$root/bin/cache/artifacts/material_fonts/Roboto-Regular.ttf');

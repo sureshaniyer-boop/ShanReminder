@@ -28,6 +28,7 @@ class AppTheme {
     );
     return ThemeData(
       useMaterial3: true,
+      fontFamily: 'Roboto',
       colorScheme: scheme,
       scaffoldBackgroundColor: paper,
       textTheme: const TextTheme(
