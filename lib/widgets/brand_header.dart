@@ -30,7 +30,7 @@ class BrandHeader extends StatelessWidget {
               Row(children: [
                 LotusMark(color: gold, size: 32),
                 const SizedBox(width: 10),
-                Expanded(child: Text('ShanReminder', style: TextStyle(
+                Expanded(child: Text('ShanReminder', style: TextStyle(fontFamily: 'Roboto', 
                   fontSize: 18, fontWeight: FontWeight.w500, color: gold,
                   letterSpacing: -0.3))),
                 IconButton(
@@ -41,15 +41,15 @@ class BrandHeader extends StatelessWidget {
                   icon: Icon(Icons.tune_rounded, size: 19, color: gold)),
               ]),
               const SizedBox(height: 22),
-              Text('PLAN TODAY · ACHIEVE TOMORROW', style: TextStyle(
+              Text('PLAN TODAY · ACHIEVE TOMORROW', style: TextStyle(fontFamily: 'Roboto', 
                 fontSize: 9, fontWeight: FontWeight.w500,
                 letterSpacing: 1.5, color: gold)),
               const SizedBox(height: 9),
-              Text('Make today meaningful.', style: TextStyle(
+              Text('Make today meaningful.', style: TextStyle(fontFamily: 'Roboto', 
                 fontSize: 28, height: 1.15, fontWeight: FontWeight.w400,
                 letterSpacing: -0.8, color: foreground)),
               const SizedBox(height: 9),
-              Text('A little focus. A brighter future.', style: TextStyle(
+              Text('A little focus. A brighter future.', style: TextStyle(fontFamily: 'Roboto', 
                 fontSize: 12, height: 1.4, color: foreground.withValues(alpha: 0.78))),
             ]),
           ),

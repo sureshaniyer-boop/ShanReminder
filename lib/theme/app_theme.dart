@@ -32,9 +32,9 @@ class AppTheme {
       colorScheme: scheme,
       scaffoldBackgroundColor: paper,
       textTheme: const TextTheme(
-        titleLarge: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: ink),
-        titleMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: ink),
-        bodyMedium: TextStyle(fontSize: 14, color: ink, height: 1.35),
+        titleLarge: TextStyle(fontFamily: 'Roboto', fontSize: 22, fontWeight: FontWeight.w700, color: ink),
+        titleMedium: TextStyle(fontFamily: 'Roboto', fontSize: 16, fontWeight: FontWeight.w600, color: ink),
+        bodyMedium: TextStyle(fontFamily: 'Roboto', fontSize: 14, color: ink, height: 1.35),
       ),
       appBarTheme: AppBarTheme(
         backgroundColor: isCream ? themeColors['Cream'] : primary,
@@ -43,7 +43,7 @@ class AppTheme {
         elevation: 0,
         scrolledUnderElevation: 0,
         systemOverlayStyle: isCream ? SystemUiOverlayStyle.dark : SystemUiOverlayStyle.light,
-        titleTextStyle: TextStyle(
+        titleTextStyle: TextStyle(fontFamily: 'Roboto', 
           color: isCream ? primary : gold, fontSize: 20, fontWeight: FontWeight.w600),
       ),
       navigationBarTheme: NavigationBarThemeData(
@@ -52,7 +52,7 @@ class AppTheme {
         surfaceTintColor: Colors.transparent,
         indicatorColor: primary.withValues(alpha: 0.08),
         elevation: 0,
-        labelTextStyle: WidgetStateProperty.resolveWith((states) => TextStyle(
+        labelTextStyle: WidgetStateProperty.resolveWith((states) => TextStyle(fontFamily: 'Roboto', 
           fontSize: 11,
           fontWeight: states.contains(WidgetState.selected) ? FontWeight.w700 : FontWeight.w500,
           color: states.contains(WidgetState.selected) ? primary : muted,
@@ -68,7 +68,7 @@ class AppTheme {
       filledButtonTheme: FilledButtonThemeData(style: FilledButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 15),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)),
-        textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+        textStyle: const TextStyle(fontFamily: 'Roboto', fontSize: 14, fontWeight: FontWeight.w600),
       )),
       inputDecorationTheme: InputDecorationTheme(
         filled: true, fillColor: Colors.white,

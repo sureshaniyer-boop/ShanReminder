@@ -75,7 +75,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     color: selected ? primary : AppTheme.muted),
                   const SizedBox(height: 5),
                   Text(labels[index], textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 10, height: 1.2,
+                    style: TextStyle(fontFamily: 'Roboto', fontSize: 10, height: 1.2,
                       fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
                       color: selected ? primary : AppTheme.muted)),
                   const SizedBox(height: 5),
@@ -118,12 +118,12 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Row(children: [
                   Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    const Text('YOUR DAY AT A GLANCE', style: TextStyle(
+                    const Text('YOUR DAY AT A GLANCE', style: TextStyle(fontFamily: 'Roboto', 
                       fontSize: 9, letterSpacing: 1.3,
                       fontWeight: FontWeight.w500, color: AppTheme.muted)),
                     const SizedBox(height: 7),
                     Text(DateFormat('EEEE, d MMM').format(now),
-                      style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w500,
+                      style: const TextStyle(fontFamily: 'Roboto', fontSize: 19, fontWeight: FontWeight.w500,
                         letterSpacing: -0.5)),
                   ])),
                   IconButton(
@@ -156,16 +156,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 9),
                 Text(today.isEmpty ? 'A fresh start, at your own pace.'
                     : '$completed of ${today.length} tasks completed today',
-                  style: const TextStyle(fontSize: 11, color: AppTheme.muted)),
+                  style: const TextStyle(fontFamily: 'Roboto', fontSize: 11, color: AppTheme.muted)),
               ]),
             ),
             const SizedBox(height: 24),
             Row(children: [
               const Expanded(child: Text("Today's tasks",
-                style: TextStyle(fontSize: 19, fontWeight: FontWeight.w500,
+                style: TextStyle(fontFamily: 'Roboto', color: AppTheme.ink, fontSize: 19, fontWeight: FontWeight.w500,
                   letterSpacing: -0.4))),
               TextButton(onPressed: () => setState(() => _index = 2),
-                child: const Text('View all  →', style: TextStyle(fontSize: 12))),
+                child: const Text('View all  →', style: TextStyle(fontFamily: 'Roboto', fontSize: 12))),
             ]),
             const SizedBox(height: 8),
             if (today.isEmpty) _emptyToday()
@@ -184,11 +184,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 const Expanded(child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start, children: [
                     Text('A focused mind creates a brighter future.',
-                      style: TextStyle(fontSize: 13, height: 1.5,
+                      style: TextStyle(fontFamily: 'Roboto', fontSize: 13, height: 1.5,
                         fontStyle: FontStyle.italic, color: Color(0xFF685637))),
                     SizedBox(height: 6),
                     Text('— Shri Kashi Sureshan Iyer',
-                      style: TextStyle(fontSize: 10, height: 1.4, color: Color(0xFF786747))),
+                      style: TextStyle(fontFamily: 'Roboto', fontSize: 10, height: 1.4, color: Color(0xFF786747))),
                   ])),
               ]),
             ),
@@ -213,11 +213,11 @@ class _HomeScreenState extends State<HomeScreen> {
         const SizedBox(height: 13),
         const Text('A little space for possibility.',
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w500, letterSpacing: -0.3)),
+          style: TextStyle(fontFamily: 'Roboto', fontSize: 17, fontWeight: FontWeight.w500, letterSpacing: -0.3)),
         const SizedBox(height: 7),
         const Text('Start with one thing that matters today.',
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 12, color: AppTheme.muted, height: 1.5)),
+          style: TextStyle(fontFamily: 'Roboto', fontSize: 12, color: AppTheme.muted, height: 1.5)),
         const SizedBox(height: 19),
         SizedBox(width: double.infinity, child: FilledButton.icon(
           onPressed: _addTask,
@@ -226,7 +226,7 @@ class _HomeScreenState extends State<HomeScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14)),
           icon: const Icon(Icons.add_rounded, size: 18),
           label: const Text('Plan my first task',
-            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500)))),
+            style: TextStyle(fontFamily: 'Roboto', fontSize: 13, fontWeight: FontWeight.w500)))),
       ]),
     );
   }
@@ -238,11 +238,11 @@ class _HomeScreenState extends State<HomeScreen> {
         Container(width: 5, height: 5, decoration: BoxDecoration(
           color: color, shape: BoxShape.circle)),
         const SizedBox(width: 7),
-        Flexible(child: Text('$value', style: const TextStyle(
+        Flexible(child: Text('$value', style: const TextStyle(fontFamily: 'Roboto', 
           fontSize: 25, height: 1.2, fontWeight: FontWeight.w400, color: AppTheme.ink))),
       ]),
       const SizedBox(height: 5),
-      Text(label, style: const TextStyle(fontSize: 10, color: AppTheme.muted)),
+      Text(label, style: const TextStyle(fontFamily: 'Roboto', fontSize: 10, color: AppTheme.muted)),
     ],
   );
 

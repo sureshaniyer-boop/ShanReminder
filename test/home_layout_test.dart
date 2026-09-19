@@ -8,6 +8,7 @@ import 'package:shan_reminder/theme/app_theme.dart';
 
 void main() {
   setUpAll(() async {
+    debugDisableShadows = false;
     final icons = FontLoader('MaterialIcons')
       ..addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf'));
     await icons.load();
