@@ -5,9 +5,8 @@ import 'services/notification_service.dart';
 import 'services/storage_service.dart';
 import 'theme/app_theme.dart';
 
-Future<void> main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  await NotificationService.instance.initialize();
   runApp(const ShanReminderApp());
 }
 
@@ -27,46 +26,74 @@ class _ShanReminderAppState extends State<ShanReminderApp> {
   @override
   void initState() {
     super.initState();
-    _load();
+    _startup();
   }
 
-  Future<void> _load() async {
-    final tasks = await _storage.loadTasks();
-    final theme = await _storage.loadTheme();
-    if (!mounted) return;
-    setState(() {
-      _tasks = tasks;
-      _themeName = theme;
-      _ready = true;
-    });
+  Future<void> _startup() async {
+    // Always allow the UI to start. Notification/plugin failures must never
+    // prevent ShanReminder from opening.
+    try {
+      await NotificationService.instance.initialize();
+    } catch (e) {
+      debugPrint('Notification initialization failed: $e');
+    }
+
+    try {
+      final tasks = await _storage.loadTasks();
+      final theme = await _storage.loadTheme();
+      if (!mounted) return;
+      setState(() {
+        _tasks = tasks;
+        _themeName = theme;
+        _ready = true;
+      });
+    } catch (e) {
+      debugPrint('Local storage initialization failed: $e');
+      if (!mounted) return;
+      setState(() => _ready = true);
+    }
   }
 
   Future<void> _add(TaskItem task) async {
     setState(() => _tasks = [..._tasks, task]);
-    await _storage.saveTasks(_tasks);
-    await NotificationService.instance.schedule(task);
+    try {
+      await _storage.saveTasks(_tasks);
+      await NotificationService.instance.schedule(task);
+    } catch (e) {
+      debugPrint('Task save/schedule failed: $e');
+    }
   }
 
   Future<void> _toggle(TaskItem task, bool completed) async {
     final updated = task.copyWith(completed: completed);
     setState(() => _tasks = _tasks.map((t) => t.id == task.id ? updated : t).toList());
-    await _storage.saveTasks(_tasks);
-    if (completed) {
-      await NotificationService.instance.cancel(task.id);
-    } else {
-      await NotificationService.instance.schedule(updated);
+    try {
+      await _storage.saveTasks(_tasks);
+      if (completed) {
+        await NotificationService.instance.cancel(task.id);
+      } else {
+        await NotificationService.instance.schedule(updated);
+      }
+    } catch (e) {
+      debugPrint('Task update failed: $e');
     }
   }
 
   Future<void> _delete(TaskItem task) async {
     setState(() => _tasks = _tasks.where((t) => t.id != task.id).toList());
-    await _storage.saveTasks(_tasks);
-    await NotificationService.instance.cancel(task.id);
+    try {
+      await _storage.saveTasks(_tasks);
+      await NotificationService.instance.cancel(task.id);
+    } catch (e) {
+      debugPrint('Task delete failed: $e');
+    }
   }
 
   void _changeTheme(String name) {
     setState(() => _themeName = name);
-    _storage.saveTheme(name);
+    _storage.saveTheme(name).catchError((e) {
+      debugPrint('Theme save failed: $e');
+    });
   }
 
   @override
@@ -76,7 +103,18 @@ class _ShanReminderAppState extends State<ShanReminderApp> {
       title: 'ShanReminder',
       theme: AppTheme.build(_themeName),
       home: !_ready
-          ? const Scaffold(body: Center(child: CircularProgressIndicator()))
+          ? const Scaffold(
+              body: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(height: 14),
+                    Text('Starting ShanReminder...'),
+                  ],
+                ),
+              ),
+            )
           : HomeScreen(
               tasks: _tasks,
               themeName: _themeName,
