@@ -14,7 +14,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   final _description = TextEditingController();
   DateTime _date = DateTime.now();
   TimeOfDay _time = TimeOfDay.now();
-  int _reminder = 10;
+  int _reminder = 0;
   String _repeat = 'None';
   String _priority = 'Medium';
   String _category = 'Work';
@@ -44,6 +44,11 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   void _save() {
     if (!_formKey.currentState!.validate()) return;
     final dueAt = DateTime(_date.year, _date.month, _date.day, _time.hour, _time.minute);
+    if (!dueAt.subtract(Duration(minutes: _reminder)).isAfter(DateTime.now())) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Choose a reminder time in the future, or select At task time.')));
+      return;
+    }
     final task = TaskItem(
       id: DateTime.now().microsecondsSinceEpoch.toString(),
       title: _title.text.trim(),

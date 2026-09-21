@@ -21,6 +21,8 @@ class _ShanReminderAppState extends State<ShanReminderApp> {
   final StorageService _storage = StorageService();
   List<TaskItem> _tasks = [];
   String _themeName = 'Maroon';
+  String _appTitle = 'ShanReminder';
+  final _messenger = GlobalKey<ScaffoldMessengerState>();
   bool _ready = false;
 
   @override
@@ -41,12 +43,26 @@ class _ShanReminderAppState extends State<ShanReminderApp> {
     try {
       final tasks = await _storage.loadTasks();
       final theme = await _storage.loadTheme();
+      final title = await _storage.loadTitle();
       if (!mounted) return;
       setState(() {
         _tasks = tasks;
         _themeName = theme;
+        _appTitle = title;
         _ready = true;
       });
+      // Migrate future alerts to the sound/vibration channel without dropping
+      // past recurring schedules that Android is already managing.
+      for (final task in tasks) {
+        if (!task.completed && task.dueAt.subtract(
+            Duration(minutes: task.reminderMinutesBefore)).isAfter(DateTime.now())) {
+          try {
+            await NotificationService.instance.schedule(task);
+          } catch (e) {
+            debugPrint('Reminder refresh failed: $e');
+          }
+        }
+      }
     } catch (e) {
       debugPrint('Local storage initialization failed: $e');
       if (!mounted) return;
@@ -61,6 +77,8 @@ class _ShanReminderAppState extends State<ShanReminderApp> {
       await NotificationService.instance.schedule(task);
     } catch (e) {
       debugPrint('Task save/schedule failed: $e');
+      _messenger.currentState?.showSnackBar(const SnackBar(
+        content: Text('Could not save or schedule this reminder. Check notification permissions in Settings and try again.')));
     }
   }
 
@@ -89,6 +107,22 @@ class _ShanReminderAppState extends State<ShanReminderApp> {
     }
   }
 
+  Future<void> _refreshReminders() async {
+    for (final task in _tasks) {
+      if (!task.completed && task.dueAt.subtract(
+          Duration(minutes: task.reminderMinutesBefore)).isAfter(DateTime.now())) {
+        await NotificationService.instance.schedule(task);
+      }
+    }
+  }
+
+  Future<void> _changeTitle(String name) async {
+    final title = name.trim();
+    if (title.isEmpty || title.length > 40) return;
+    await _storage.saveTitle(title);
+    if (mounted) setState(() => _appTitle = title);
+  }
+
   void _changeTheme(String name) {
     setState(() => _themeName = name);
     _storage.saveTheme(name).catchError((e) {
@@ -100,7 +134,8 @@ class _ShanReminderAppState extends State<ShanReminderApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'ShanReminder',
+      title: _appTitle,
+      scaffoldMessengerKey: _messenger,
       theme: AppTheme.build(_themeName),
       home: !_ready
           ? const Scaffold(
@@ -117,6 +152,9 @@ class _ShanReminderAppState extends State<ShanReminderApp> {
             )
           : HomeScreen(
               tasks: _tasks,
+              appTitle: _appTitle,
+              onTitleChanged: _changeTitle,
+              onRefreshReminders: _refreshReminders,
               themeName: _themeName,
               onAdd: _add,
               onToggle: _toggle,
