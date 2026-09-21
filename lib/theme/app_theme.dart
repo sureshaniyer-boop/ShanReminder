@@ -43,7 +43,7 @@ class AppTheme {
         elevation: 0,
         scrolledUnderElevation: 0,
         systemOverlayStyle: isCream ? SystemUiOverlayStyle.dark : SystemUiOverlayStyle.light,
-        titleTextStyle: TextStyle(fontFamily: 'Roboto',
+        titleTextStyle: TextStyle(fontFamily: 'Roboto', 
           color: isCream ? primary : gold, fontSize: 20, fontWeight: FontWeight.w600),
       ),
       navigationBarTheme: NavigationBarThemeData(
@@ -52,7 +52,7 @@ class AppTheme {
         surfaceTintColor: Colors.transparent,
         indicatorColor: primary.withValues(alpha: 0.08),
         elevation: 0,
-        labelTextStyle: WidgetStateProperty.resolveWith((states) => TextStyle(fontFamily: 'Roboto',
+        labelTextStyle: WidgetStateProperty.resolveWith((states) => TextStyle(fontFamily: 'Roboto', 
           fontSize: 11,
           fontWeight: states.contains(WidgetState.selected) ? FontWeight.w700 : FontWeight.w500,
           color: states.contains(WidgetState.selected) ? primary : muted,

@@ -107,6 +107,15 @@ class _ShanReminderAppState extends State<ShanReminderApp> {
     }
   }
 
+  Future<void> _refreshReminders() async {
+    for (final task in _tasks) {
+      if (!task.completed && task.dueAt.subtract(
+          Duration(minutes: task.reminderMinutesBefore)).isAfter(DateTime.now())) {
+        await NotificationService.instance.schedule(task);
+      }
+    }
+  }
+
   Future<void> _changeTitle(String name) async {
     final title = name.trim();
     if (title.isEmpty || title.length > 40) return;
@@ -145,6 +154,7 @@ class _ShanReminderAppState extends State<ShanReminderApp> {
               tasks: _tasks,
               appTitle: _appTitle,
               onTitleChanged: _changeTitle,
+              onRefreshReminders: _refreshReminders,
               themeName: _themeName,
               onAdd: _add,
               onToggle: _toggle,

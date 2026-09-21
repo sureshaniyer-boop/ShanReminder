@@ -11,6 +11,7 @@ class HomeScreen extends StatefulWidget {
   final List<TaskItem> tasks;
   final String themeName;
   final String appTitle;
+  final Future<void> Function()? onRefreshReminders;
   final Future<void> Function(String)? onTitleChanged;
   final Future<void> Function(TaskItem task) onAdd;
   final Future<void> Function(TaskItem task, bool completed) onToggle;
@@ -20,6 +21,7 @@ class HomeScreen extends StatefulWidget {
   const HomeScreen({
     super.key,
     this.appTitle = 'ShanReminder',
+    this.onRefreshReminders,
     this.onTitleChanged,
     required this.tasks,
     required this.themeName,
@@ -42,7 +44,8 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final pages = [_dashboard(), _calendar(), _allTasks(),
       SettingsScreen(themeName: widget.themeName, onThemeChanged: widget.onThemeChanged,
-        appTitle: widget.appTitle, onTitleChanged: widget.onTitleChanged)];
+        appTitle: widget.appTitle, onTitleChanged: widget.onTitleChanged,
+        onRefreshReminders: widget.onRefreshReminders)];
     final todayHasTasks = widget.tasks.any((t) => _sameDay(t.dueAt, DateTime.now()));
     return Scaffold(
       appBar: _index == 0 ? null : AppBar(

@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shan_reminder/models/task.dart';
 import 'package:shan_reminder/screens/home_screen.dart';
 import 'package:shan_reminder/theme/app_theme.dart';
+import 'package:shan_reminder/screens/settings_screen.dart';
 
 void main() {
   setUpAll(() async {
@@ -84,6 +85,26 @@ void main() {
     final medium = tester.widget<Text>(find.text('Medium priority'));
     expect(high.style?.color, const Color(0xFFB42318));
     expect(medium.style?.color, const Color(0xFF946200));
+  });
+
+  testWidgets('Custom title validates and saves trimmed text', (tester) async {
+    String? saved;
+    await tester.pumpWidget(MaterialApp(home: Scaffold(body: SettingsScreen(
+      themeName: 'Maroon', appTitle: 'ShanReminder', onThemeChanged: (_) {},
+      onTitleChanged: (title) async { saved = title; },
+    ))));
+    await tester.tap(find.text('App title'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextFormField), '   ');
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+    expect(find.text('Enter a name'), findsOneWidget);
+    expect(saved, isNull);
+    await tester.enterText(find.byType(TextFormField), '  My Executive Planner  ');
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+    expect(saved, 'My Executive Planner');
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('Small screen with enlarged text and working navigation', (tester) async {

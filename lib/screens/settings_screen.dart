@@ -5,10 +5,11 @@ import '../services/notification_service.dart';
 class SettingsScreen extends StatelessWidget {
   final String themeName;
   final String appTitle;
+  final Future<void> Function()? onRefreshReminders;
   final ValueChanged<String> onThemeChanged;
   final Future<void> Function(String)? onTitleChanged;
   const SettingsScreen({super.key, required this.themeName,
-    required this.onThemeChanged, this.appTitle = 'ShanReminder', this.onTitleChanged});
+    required this.onThemeChanged, this.appTitle = 'ShanReminder', this.onTitleChanged, this.onRefreshReminders});
 
   Future<void> _rename(BuildContext context) async {
     final name = await showDialog<String>(context: context,
@@ -50,6 +51,11 @@ class SettingsScreen extends StatelessWidget {
     Card(child: ListTile(leading: const Icon(Icons.settings_outlined),
       title: const Text('Phone notification settings'),
       onTap: () => _run(context, NotificationService.instance.openSettings, 'Notification settings opened'))),
+    Card(child: ListTile(leading: const Icon(Icons.refresh),
+      title: const Text('Refresh scheduled reminders'),
+      subtitle: const Text('Use after allowing notifications and alarms'),
+      onTap: () => _run(context, () async { await onRefreshReminders?.call(); },
+        'Upcoming reminders refreshed'))),
     const SizedBox(height: 24),
     Text('Appearance', style: Theme.of(context).textTheme.titleLarge),
     const SizedBox(height: 10),
