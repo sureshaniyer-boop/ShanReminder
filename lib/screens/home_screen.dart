@@ -10,6 +10,8 @@ import 'settings_screen.dart';
 class HomeScreen extends StatefulWidget {
   final List<TaskItem> tasks;
   final String themeName;
+  final String appTitle;
+  final Future<void> Function(String)? onTitleChanged;
   final Future<void> Function(TaskItem task) onAdd;
   final Future<void> Function(TaskItem task, bool completed) onToggle;
   final Future<void> Function(TaskItem task) onDelete;
@@ -17,6 +19,8 @@ class HomeScreen extends StatefulWidget {
 
   const HomeScreen({
     super.key,
+    this.appTitle = 'ShanReminder',
+    this.onTitleChanged,
     required this.tasks,
     required this.themeName,
     required this.onAdd,
@@ -37,7 +41,8 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final pages = [_dashboard(), _calendar(), _allTasks(),
-      SettingsScreen(themeName: widget.themeName, onThemeChanged: widget.onThemeChanged)];
+      SettingsScreen(themeName: widget.themeName, onThemeChanged: widget.onThemeChanged,
+        appTitle: widget.appTitle, onTitleChanged: widget.onTitleChanged)];
     final todayHasTasks = widget.tasks.any((t) => _sameDay(t.dueAt, DateTime.now()));
     return Scaffold(
       appBar: _index == 0 ? null : AppBar(
@@ -98,14 +103,21 @@ class _HomeScreenState extends State<HomeScreen> {
     final completed = today.where((t) => t.completed).length;
     final overdue = widget.tasks.where((t) => !t.completed && t.dueAt.isBefore(now)).length;
     final primary = Theme.of(context).colorScheme.primary;
-    return SingleChildScrollView(child: Column(children: [
-      BrandHeader(themeName: widget.themeName,
-        onSettings: () => setState(() => _index = 3)),
-      Transform.translate(
-        offset: const Offset(0, -24),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 60),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+    return LayoutBuilder(builder: (context, constraints) {
+      final compact = constraints.maxHeight < 650 ||
+          MediaQuery.textScalerOf(context).scale(12) > 16;
+      return Column(children: [
+        // This region is outside the task list's scroll viewport.
+        ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: constraints.maxHeight * 0.62),
+          child: SingleChildScrollView(
+            physics: const NeverScrollableScrollPhysics(),
+            child: Column(children: [
+              BrandHeader(themeName: widget.themeName, appTitle: widget.appTitle,
+                compact: compact, onSettings: () => setState(() => _index = 3)),
+              Transform.translate(offset: const Offset(0, -16),
+                child: Padding(padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: compact ? _compactSummary(today.length, completed, overdue, now) :
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -118,7 +130,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Row(children: [
                   Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    const Text('YOUR DAY AT A GLANCE', style: TextStyle(fontFamily: 'Roboto', 
+                    const Text('YOUR DAY AT A GLANCE', style: TextStyle(fontFamily: 'Roboto',
                       fontSize: 9, letterSpacing: 1.3,
                       fontWeight: FontWeight.w500, color: AppTheme.muted)),
                     const SizedBox(height: 7),
@@ -158,8 +170,15 @@ class _HomeScreenState extends State<HomeScreen> {
                     : '$completed of ${today.length} tasks completed today',
                   style: const TextStyle(fontFamily: 'Roboto', fontSize: 11, color: AppTheme.muted)),
               ]),
-            ),
-            const SizedBox(height: 24),
+            )
+                )),
+            ]),
+          ),
+        ),
+        Expanded(child: ListView(
+          key: const ValueKey('today-task-list'),
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 90),
+          children: [
             Row(children: [
               const Expanded(child: Text("Today's tasks",
                 style: TextStyle(fontFamily: 'Roboto', color: AppTheme.ink, fontSize: 19, fontWeight: FontWeight.w500,
@@ -192,10 +211,22 @@ class _HomeScreenState extends State<HomeScreen> {
                   ])),
               ]),
             ),
-          ]),
-        ),
-      ),
-    ]));
+
+          ],
+        )),
+      ]);
+    });
+  }
+
+  Widget _compactSummary(int total, int completed, int overdue, DateTime now) {
+    return Card(child: Padding(padding: const EdgeInsets.all(12),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(DateFormat('EEEE, d MMM').format(now),
+          style: const TextStyle(fontWeight: FontWeight.w600)),
+        const SizedBox(height: 6),
+        Text('$total tasks · $completed completed · ${total - completed} pending · $overdue overdue',
+          style: const TextStyle(fontSize: 12, color: AppTheme.muted)),
+      ])));
   }
 
   Widget _emptyToday() {
@@ -238,7 +269,7 @@ class _HomeScreenState extends State<HomeScreen> {
         Container(width: 5, height: 5, decoration: BoxDecoration(
           color: color, shape: BoxShape.circle)),
         const SizedBox(width: 7),
-        Flexible(child: Text('$value', style: const TextStyle(fontFamily: 'Roboto', 
+        Flexible(child: Text('$value', style: const TextStyle(fontFamily: 'Roboto',
           fontSize: 25, height: 1.2, fontWeight: FontWeight.w400, color: AppTheme.ink))),
       ]),
       const SizedBox(height: 5),

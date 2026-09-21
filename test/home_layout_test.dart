@@ -68,11 +68,29 @@ void main() {
     }
   }
 
+  testWidgets('Header stays fixed while the task area scrolls', (tester) async {
+    await mount(tester, 'Maroon', populated: true);
+    final before = tester.getTopLeft(find.text('ShanReminder'));
+    final list = find.byKey(const ValueKey('today-task-list'));
+    await tester.drag(list, const Offset(0, -300));
+    await tester.pumpAndSettle();
+    expect(tester.getTopLeft(find.text('ShanReminder')), before);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Priority labels have distinct accessible colours', (tester) async {
+    await mount(tester, 'Maroon', populated: true);
+    final high = tester.widget<Text>(find.text('High priority'));
+    final medium = tester.widget<Text>(find.text('Medium priority'));
+    expect(high.style?.color, const Color(0xFFB42318));
+    expect(medium.style?.color, const Color(0xFF946200));
+  });
+
   testWidgets('Small screen with enlarged text and working navigation', (tester) async {
     await mount(tester, 'Cream', width: 320, scale: 1.6);
     expect(tester.takeException(), isNull);
     await tester.scrollUntilVisible(find.text('Plan my first task'), 150,
-      scrollable: find.byType(Scrollable).first);
+      scrollable: find.descendant(of: find.byKey(const ValueKey('today-task-list')), matching: find.byType(Scrollable)));
     expect(tester.takeException(), isNull);
     await mount(tester, 'Emerald');
     await tester.ensureVisible(find.text('Plan my first task'));
