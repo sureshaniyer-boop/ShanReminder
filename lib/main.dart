@@ -82,6 +82,21 @@ class _ShanReminderAppState extends State<ShanReminderApp> {
     }
   }
 
+  Future<void> _update(TaskItem task) async {
+    setState(() => _tasks = _tasks.map((t) => t.id == task.id ? task : t).toList());
+    try {
+      await _storage.saveTasks(_tasks);
+      await NotificationService.instance.cancel(task.id);
+      if (!task.completed) {
+        await NotificationService.instance.schedule(task);
+      }
+    } catch (e) {
+      debugPrint('Task edit failed: $e');
+      _messenger.currentState?.showSnackBar(const SnackBar(
+        content: Text('Task saved, but its reminder could not be scheduled. Check reminder permissions.')));
+    }
+  }
+
   Future<void> _toggle(TaskItem task, bool completed) async {
     final updated = task.copyWith(completed: completed);
     setState(() => _tasks = _tasks.map((t) => t.id == task.id ? updated : t).toList());
@@ -158,6 +173,7 @@ class _ShanReminderAppState extends State<ShanReminderApp> {
               themeName: _themeName,
               onAdd: _add,
               onToggle: _toggle,
+              onUpdate: _update,
               onDelete: _delete,
               onThemeChanged: _changeTheme,
             ),
