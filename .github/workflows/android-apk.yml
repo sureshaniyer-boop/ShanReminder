@@ -34,12 +34,14 @@ jobs:
         run: |
           mkdir -p /tmp/shan_source
           cp -R lib /tmp/shan_source/lib
+          cp -R assets /tmp/shan_source/assets
           cp pubspec.yaml /tmp/shan_source/pubspec.yaml
           cp android/app/src/main/AndroidManifest.xml /tmp/shan_source/AndroidManifest.xml
           flutter create --platforms=android --org com.shanreminder --project-name shan_reminder build_app
           rm -rf build_app/lib
           rm -rf build_app/test
           cp -R /tmp/shan_source/lib build_app/lib
+          cp -R /tmp/shan_source/assets build_app/assets
           cp -R test build_app/test
           cp /tmp/shan_source/pubspec.yaml build_app/pubspec.yaml
           cp /tmp/shan_source/AndroidManifest.xml build_app/android/app/src/main/AndroidManifest.xml
@@ -78,9 +80,19 @@ jobs:
           p.write_text(text)
           PY
 
+      - name: Render ShanReminder v1.6 launcher icon
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y librsvg2-bin
+          rsvg-convert -w 1024 -h 1024 build_app/assets/shanreminder_v16_icon.svg -o build_app/assets/shanreminder_v16_icon.png
+
       - name: Install dependencies
         working-directory: build_app
         run: flutter pub get
+
+      - name: Generate Android launcher icons
+        working-directory: build_app
+        run: dart run flutter_launcher_icons
 
       - name: Analyze
         working-directory: build_app
@@ -121,7 +133,7 @@ jobs:
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ShanReminder-v1.5-Android-APK
+          name: ShanReminder-v1.6-Android-APK
           path: build_app/build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
           retention-days: 30
