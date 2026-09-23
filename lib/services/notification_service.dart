@@ -104,7 +104,7 @@ class NotificationService {
           : task.description,
       scheduledDate: scheduled,
       notificationDetails: alertDetails,
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      androidScheduleMode: AndroidScheduleMode.alarmClock,
       matchDateTimeComponents: match,
       payload: task.id,
     );
