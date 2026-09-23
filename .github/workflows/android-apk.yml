@@ -24,24 +24,29 @@ jobs:
       - name: Show Flutter version
         run: flutter --version
 
-      - name: Restore persistent ShanReminder signing key
+      - name: Restore persistent ShanReminder signing identity
         id: signing_cache
         uses: actions/cache@v5
         with:
-          path: ~/.android/shanreminder-release.jks
+          path: ~/.android/shanreminder-signing
           key: shanreminder-release-signing-v1
 
-      - name: Create signing key on first v1.5 build
+      - name: Create signing identity on first v1.5 build
         if: ${{ steps.signing_cache.outputs['cache-hit'] != 'true' }}
         run: |
-          mkdir -p ~/.android
+          mkdir -p ~/.android/shanreminder-signing
+          PASS="$(openssl rand -hex 16)"
+          printf '%s' "$PASS" > ~/.android/shanreminder-signing/password.txt
           keytool -genkeypair -v \
-            -keystore ~/.android/shanreminder-release.jks \
-            -storepass ShanReminderLocal2026 \
-            -keypass ShanReminderLocal2026 \
+            -keystore ~/.android/shanreminder-signing/shanreminder-release.jks \
+            -storepass "$PASS" \
+            -keypass "$PASS" \
             -alias shanreminder \
             -keyalg RSA -keysize 2048 -validity 10000 \
             -dname "CN=ShanReminder, OU=Mobile, O=ShanReminder, L=Kuala Lumpur, ST=Kuala Lumpur, C=MY"
+
+      - name: Export signing password
+        run: echo "SHAN_SIGNING_PASSWORD=$(cat ~/.android/shanreminder-signing/password.txt)" >> "$GITHUB_ENV"
 
       - name: Create Android project shell
         run: |
@@ -67,17 +72,23 @@ jobs:
           )
           if 'coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")' not in text:
               text += '\n\ndependencies {\n    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")\n}\n'
-          # Use one persistent release signing identity so v1.6+ can update v1.5
-          # instead of Android reporting an incompatible package signature.
-          android = text
-          marker = "android {\\n"
-          signing = "android {\\n    signingConfigs {\\n        create(\\\"shanRelease\\\") {\\n            storeFile = file(System.getProperty(\\\"user.home\\\") + \\"/.android/shanreminder-release.jks\\")\\n            storePassword = \\"ShanReminderLocal2026\\"\\n            keyAlias = \\"shanreminder\\"\\n            keyPassword = \\"ShanReminderLocal2026\\"\\n        }\\n    }\\n"
-          android = android.replace(marker, signing, 1)
-          android = android.replace(
-              "signingConfig = signingConfigs.getByName(\"debug\")",
-              "signingConfig = signingConfigs.getByName(\"shanRelease\")",
+
+          signing = '''android {
+    signingConfigs {
+        create("shanRelease") {
+            storeFile = file(System.getProperty("user.home") + "/.android/shanreminder-signing/shanreminder-release.jks")
+            storePassword = System.getenv("SHAN_SIGNING_PASSWORD")
+            keyAlias = "shanreminder"
+            keyPassword = System.getenv("SHAN_SIGNING_PASSWORD")
+        }
+    }
+'''
+          text = text.replace("android {\n", signing, 1)
+          text = text.replace(
+              'signingConfig = signingConfigs.getByName("debug")',
+              'signingConfig = signingConfigs.getByName("shanRelease")',
           )
-          p.write_text(android)
+          p.write_text(text)
           PY
 
       - name: Install dependencies
