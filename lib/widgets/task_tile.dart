@@ -11,6 +11,12 @@ class TaskTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final priorityColor = switch (task.priority) {
+      'High' => const Color(0xFFB42318),
+      'Medium' => const Color(0xFF946200),
+      'Low' => const Color(0xFF187442),
+      _ => AppTheme.muted,
+    };
     final primary = Theme.of(context).colorScheme.primary;
     final categoryColor = switch (task.category) {
       'Work' => const Color(0xFF23568B),
@@ -57,7 +63,7 @@ class TaskTile extends StatelessWidget {
                     ]),
                   ),
                   Text('${task.priority} priority',
-                    style: const TextStyle(fontSize: 11, color: AppTheme.muted)),
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: priorityColor)),
                 ],
               ),
             ],
