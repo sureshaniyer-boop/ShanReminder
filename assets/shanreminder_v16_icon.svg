@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+<defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#d7183f"/><stop offset=".42" stop-color="#8d001d"/><stop offset="1" stop-color="#3f0010"/></linearGradient>
+  <linearGradient id="red" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#f62b4f"/><stop offset=".45" stop-color="#a60024"/><stop offset="1" stop-color="#5b0015"/></linearGradient>
+  <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff3a9"/><stop offset=".25" stop-color="#ffd35a"/><stop offset=".55" stop-color="#c47a00"/><stop offset=".8" stop-color="#ffe37b"/><stop offset="1" stop-color="#9b5700"/></linearGradient>
+  <linearGradient id="cream" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#fffdf4"/><stop offset=".65" stop-color="#fff2c9"/><stop offset="1" stop-color="#e8bf67"/></linearGradient>
+  <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#2a0009" flood-opacity=".45"/></filter>
+  <filter id="soft"><feGaussianBlur stdDeviation="5"/></filter>
+</defs>
+
+<rect x="28" y="28" width="968" height="968" rx="210" fill="url(#bg)" stroke="#ff365a" stroke-width="10"/>
+<ellipse cx="512" cy="932" rx="350" ry="34" fill="#210008" opacity=".28" filter="url(#soft)"/>
+
+<!-- side petals -->
+<g fill="url(#red)" stroke="url(#gold)" stroke-width="9" opacity=".9">
+  <path d="M118 584 C88 480 108 370 190 300 C205 406 192 505 118 584Z"/>
+  <path d="M99 742 C52 634 82 530 179 461 C198 575 167 669 99 742Z"/>
+  <path d="M906 584 C936 480 916 370 834 300 C819 406 832 505 906 584Z"/>
+  <path d="M925 742 C972 634 942 530 845 461 C826 575 857 669 925 742Z"/>
+</g>
+
+<!-- calendar -->
+<g filter="url(#shadow)">
+  <rect x="180" y="160" width="664" height="545" rx="66" fill="url(#cream)" stroke="#f3c54f" stroke-width="7"/>
+  <path d="M180 226 Q180 160 246 160 H778 Q844 160 844 226 V294 H180Z" fill="url(#red)" stroke="#ff7d92" stroke-width="6"/>
+  <rect x="180" y="287" width="664" height="9" fill="url(#gold)"/>
+  <!-- binder rings -->
+  <g fill="url(#gold)" stroke="#ffed9b" stroke-width="6">
+    <rect x="310" y="86" width="60" height="150" rx="30"/>
+    <rect x="654" y="86" width="60" height="150" rx="30"/>
+  </g>
+  <ellipse cx="340" cy="226" rx="40" ry="23" fill="#35000c" opacity=".8"/>
+  <ellipse cx="684" cy="226" rx="40" ry="23" fill="#35000c" opacity=".8"/>
+
+  <!-- calendar grid -->
+  <g fill="#e7bc69" opacity=".78">
+    <rect x="250" y="356" width="84" height="84" rx="18"/><rect x="358" y="356" width="84" height="84" rx="18"/><rect x="466" y="356" width="84" height="84" rx="18"/>
+    <rect x="250" y="464" width="84" height="84" rx="18"/><rect x="358" y="464" width="84" height="84" rx="18"/><rect x="466" y="464" width="84" height="84" rx="18"/>
+    <rect x="250" y="572" width="84" height="84" rx="18"/><rect x="358" y="572" width="84" height="84" rx="18"/>
+  </g>
+
+  <!-- checklist -->
+  <g fill="none" stroke="#a9002d" stroke-width="29" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M596 389 l27 28 l54 -60"/><path d="M596 497 l27 28 l54 -60"/><path d="M596 605 l27 28 l54 -60"/>
+  </g>
+  <g stroke="#6f001c" stroke-width="24" stroke-linecap="round">
+    <path d="M718 394 H790"/><path d="M718 502 H790"/><path d="M718 610 H790"/>
+  </g>
+</g>
+
+<!-- lotus -->
+<g filter="url(#shadow)" stroke="url(#gold)" stroke-width="9" stroke-linejoin="round">
+  <path d="M512 836 C405 800 349 710 389 617 C459 648 498 711 512 836Z" fill="url(#red)"/>
+  <path d="M512 836 C619 800 675 710 635 617 C565 648 526 711 512 836Z" fill="url(#red)"/>
+  <path d="M512 840 C411 867 305 835 243 745 C343 724 429 760 512 840Z" fill="url(#red)"/>
+  <path d="M512 840 C613 867 719 835 781 745 C681 724 595 760 512 840Z" fill="url(#red)"/>
+  <path d="M512 807 C450 716 451 606 512 524 C573 606 574 716 512 807Z" fill="url(#red)"/>
+  <path d="M512 874 C463 814 457 715 512 657 C567 715 561 814 512 874Z" fill="url(#gold)"/>
+  <path d="M512 874 C423 884 333 842 292 774 C384 756 456 791 512 874Z" fill="url(#gold)"/>
+  <path d="M512 874 C601 884 691 842 732 774 C640 756 568 791 512 874Z" fill="url(#gold)"/>
+</g>
+</svg>
