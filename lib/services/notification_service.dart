@@ -104,7 +104,7 @@ class NotificationService {
           : task.description,
       scheduledDate: scheduled,
       notificationDetails: alertDetails,
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      // alarmClock is the strongest user-visible AlarmManager mode. It wakes the\n      // device from low-power idle so a due reminder can alert on a locked screen.\n      androidScheduleMode: AndroidScheduleMode.alarmClock,
       matchDateTimeComponents: match,
       payload: task.id,
     );
