@@ -4,8 +4,10 @@ import '../theme/app_theme.dart';
 
 class BrandHeader extends StatelessWidget {
   final String themeName;
+  final String appTitle;
+  final bool compact;
   final VoidCallback onSettings;
-  const BrandHeader({super.key, required this.themeName, required this.onSettings});
+  const BrandHeader({super.key, required this.themeName, required this.onSettings, this.appTitle = 'ShanReminder', this.compact = false});
 
   @override
   Widget build(BuildContext context) {
@@ -25,12 +27,12 @@ class BrandHeader extends StatelessWidget {
           Positioned(right: -20, bottom: 20, child: Opacity(
             opacity: 0.065, child: LotusMark(color: gold, size: 175))),
           Padding(
-            padding: const EdgeInsets.fromLTRB(24, 16, 20, 48),
+            padding: EdgeInsets.fromLTRB(24, compact ? 4 : 16, 20, compact ? 24 : 48),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Row(children: [
                 LotusMark(color: gold, size: 32),
                 const SizedBox(width: 10),
-                Expanded(child: Text('ShanReminder', style: TextStyle(fontFamily: 'Roboto', 
+                Expanded(child: Text(appTitle, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontFamily: 'Roboto',
                   fontSize: 18, fontWeight: FontWeight.w500, color: gold,
                   letterSpacing: -0.3))),
                 IconButton(
@@ -40,17 +42,19 @@ class BrandHeader extends StatelessWidget {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
                   icon: Icon(Icons.tune_rounded, size: 19, color: gold)),
               ]),
+              if (!compact) ...[
               const SizedBox(height: 22),
-              Text('PLAN TODAY · ACHIEVE TOMORROW', style: TextStyle(fontFamily: 'Roboto', 
+              Text('PLAN TODAY · ACHIEVE TOMORROW', style: TextStyle(fontFamily: 'Roboto',
                 fontSize: 9, fontWeight: FontWeight.w500,
                 letterSpacing: 1.5, color: gold)),
               const SizedBox(height: 9),
-              Text('Make today meaningful.', style: TextStyle(fontFamily: 'Roboto', 
+              Text('Make today meaningful.', style: TextStyle(fontFamily: 'Roboto',
                 fontSize: 28, height: 1.15, fontWeight: FontWeight.w400,
                 letterSpacing: -0.8, color: foreground)),
               const SizedBox(height: 9),
-              Text('A little focus. A brighter future.', style: TextStyle(fontFamily: 'Roboto', 
+              Text('A little focus. A brighter future.', style: TextStyle(fontFamily: 'Roboto',
                 fontSize: 12, height: 1.4, color: foreground.withValues(alpha: 0.78))),
+              ],
             ]),
           ),
         ])),
