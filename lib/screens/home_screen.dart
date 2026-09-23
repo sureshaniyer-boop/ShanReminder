@@ -10,17 +10,25 @@ import 'settings_screen.dart';
 class HomeScreen extends StatefulWidget {
   final List<TaskItem> tasks;
   final String themeName;
+  final String appTitle;
+  final Future<void> Function()? onRefreshReminders;
+  final Future<void> Function(String)? onTitleChanged;
   final Future<void> Function(TaskItem task) onAdd;
   final Future<void> Function(TaskItem task, bool completed) onToggle;
+  final Future<void> Function(TaskItem task) onUpdate;
   final Future<void> Function(TaskItem task) onDelete;
   final ValueChanged<String> onThemeChanged;
 
   const HomeScreen({
     super.key,
+    this.appTitle = 'ShanReminder',
+    this.onRefreshReminders,
+    this.onTitleChanged,
     required this.tasks,
     required this.themeName,
     required this.onAdd,
     required this.onToggle,
+    required this.onUpdate,
     required this.onDelete,
     required this.onThemeChanged,
   });
@@ -31,13 +39,17 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _index = 0;
+  DateTime _selectedCalendarDay = DateTime.now();
+  DateTime _visibleCalendarMonth = DateTime(DateTime.now().year, DateTime.now().month);
 
   bool _sameDay(DateTime a, DateTime b) => a.year == b.year && a.month == b.month && a.day == b.day;
 
   @override
   Widget build(BuildContext context) {
     final pages = [_dashboard(), _calendar(), _allTasks(),
-      SettingsScreen(themeName: widget.themeName, onThemeChanged: widget.onThemeChanged)];
+      SettingsScreen(themeName: widget.themeName, onThemeChanged: widget.onThemeChanged,
+        appTitle: widget.appTitle, onTitleChanged: widget.onTitleChanged,
+        onRefreshReminders: widget.onRefreshReminders)];
     final todayHasTasks = widget.tasks.any((t) => _sameDay(t.dueAt, DateTime.now()));
     return Scaffold(
       appBar: _index == 0 ? null : AppBar(
@@ -98,14 +110,21 @@ class _HomeScreenState extends State<HomeScreen> {
     final completed = today.where((t) => t.completed).length;
     final overdue = widget.tasks.where((t) => !t.completed && t.dueAt.isBefore(now)).length;
     final primary = Theme.of(context).colorScheme.primary;
-    return SingleChildScrollView(child: Column(children: [
-      BrandHeader(themeName: widget.themeName,
-        onSettings: () => setState(() => _index = 3)),
-      Transform.translate(
-        offset: const Offset(0, -24),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 60),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+    return LayoutBuilder(builder: (context, constraints) {
+      final compact = constraints.maxHeight < 650 ||
+          MediaQuery.textScalerOf(context).scale(12) > 16;
+      return Column(children: [
+        // This region is outside the task list's scroll viewport.
+        ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: constraints.maxHeight * 0.62),
+          child: SingleChildScrollView(
+            physics: const NeverScrollableScrollPhysics(),
+            child: Column(children: [
+              BrandHeader(themeName: widget.themeName, appTitle: widget.appTitle,
+                compact: compact, onSettings: () => setState(() => _index = 3)),
+              Transform.translate(offset: const Offset(0, -16),
+                child: Padding(padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: compact ? _compactSummary(today.length, completed, overdue, now) :
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -118,7 +137,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Row(children: [
                   Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    const Text('YOUR DAY AT A GLANCE', style: TextStyle(fontFamily: 'Roboto', 
+                    const Text('YOUR DAY AT A GLANCE', style: TextStyle(fontFamily: 'Roboto',
                       fontSize: 9, letterSpacing: 1.3,
                       fontWeight: FontWeight.w500, color: AppTheme.muted)),
                     const SizedBox(height: 7),
@@ -158,8 +177,15 @@ class _HomeScreenState extends State<HomeScreen> {
                     : '$completed of ${today.length} tasks completed today',
                   style: const TextStyle(fontFamily: 'Roboto', fontSize: 11, color: AppTheme.muted)),
               ]),
-            ),
-            const SizedBox(height: 24),
+            )
+                )),
+            ]),
+          ),
+        ),
+        Expanded(child: ListView(
+          key: const ValueKey('today-task-list'),
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 90),
+          children: [
             Row(children: [
               const Expanded(child: Text("Today's tasks",
                 style: TextStyle(fontFamily: 'Roboto', color: AppTheme.ink, fontSize: 19, fontWeight: FontWeight.w500,
@@ -192,10 +218,22 @@ class _HomeScreenState extends State<HomeScreen> {
                   ])),
               ]),
             ),
-          ]),
-        ),
-      ),
-    ]));
+
+          ],
+        )),
+      ]);
+    });
+  }
+
+  Widget _compactSummary(int total, int completed, int overdue, DateTime now) {
+    return Card(child: Padding(padding: const EdgeInsets.all(12),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(DateFormat('EEEE, d MMM').format(now),
+          style: const TextStyle(fontWeight: FontWeight.w600)),
+        const SizedBox(height: 6),
+        Text('$total tasks · $completed completed · ${total - completed} pending · $overdue overdue',
+          style: const TextStyle(fontSize: 12, color: AppTheme.muted)),
+      ])));
   }
 
   Widget _emptyToday() {
@@ -238,7 +276,7 @@ class _HomeScreenState extends State<HomeScreen> {
         Container(width: 5, height: 5, decoration: BoxDecoration(
           color: color, shape: BoxShape.circle)),
         const SizedBox(width: 7),
-        Flexible(child: Text('$value', style: const TextStyle(fontFamily: 'Roboto', 
+        Flexible(child: Text('$value', style: const TextStyle(fontFamily: 'Roboto',
           fontSize: 25, height: 1.2, fontWeight: FontWeight.w400, color: AppTheme.ink))),
       ]),
       const SizedBox(height: 5),
@@ -253,13 +291,272 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _calendar() {
-    final upcoming = widget.tasks.where((t)=>!t.completed && t.dueAt.isAfter(DateTime.now().subtract(const Duration(minutes: 1)))).toList()..sort((a,b)=>a.dueAt.compareTo(b.dueAt));
-    return ListView(padding: const EdgeInsets.all(18), children: [
-      Text('Upcoming', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
-      const SizedBox(height: 10),
-      if (upcoming.isEmpty) const Card(child: Padding(padding: EdgeInsets.all(22), child: Text('Nothing upcoming.')))
-      else ...upcoming.map((t)=>TaskTile(task:t,onChanged:(v)=>widget.onToggle(t,v??false))),
-    ]);
+    final primary = Theme.of(context).colorScheme.primary;
+    final selectedTasks = widget.tasks
+        .where((t) => _sameDay(t.dueAt, _selectedCalendarDay))
+        .toList()
+      ..sort((a, b) => a.dueAt.compareTo(b.dueAt));
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(18, 12, 18, 100),
+      children: [
+        Container(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 18),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: AppTheme.border),
+            boxShadow: [
+              BoxShadow(
+                color: primary.withValues(alpha: 0.06),
+                blurRadius: 26,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: Column(children: [
+            Row(children: [
+              IconButton(
+                tooltip: 'Previous month',
+                onPressed: () => _changeCalendarMonth(-1),
+                icon: const Icon(Icons.chevron_left_rounded)),
+              Expanded(
+                child: Column(children: [
+                  Text(
+                    DateFormat('MMMM').format(_visibleCalendarMonth),
+                    style: const TextStyle(
+                      fontSize: 23,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.5)),
+                  Text(
+                    DateFormat('yyyy').format(_visibleCalendarMonth),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppTheme.muted,
+                      fontWeight: FontWeight.w500)),
+                ]),
+              ),
+              IconButton(
+                tooltip: 'Next month',
+                onPressed: () => _changeCalendarMonth(1),
+                icon: const Icon(Icons.chevron_right_rounded)),
+            ]),
+            const SizedBox(height: 12),
+            const Row(
+              children: [
+                _Weekday('M'), _Weekday('T'), _Weekday('W'),
+                _Weekday('T'), _Weekday('F'), _Weekday('S'), _Weekday('S'),
+              ],
+            ),
+            const SizedBox(height: 8),
+            _calendarGrid(primary),
+          ]),
+        ),
+        const SizedBox(height: 24),
+        Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
+          const Expanded(
+            child: Text(
+              'Task of the Day',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.4))),
+          Text(
+            DateFormat('d MMM').format(_selectedCalendarDay),
+            style: TextStyle(
+              fontSize: 12,
+              color: primary,
+              fontWeight: FontWeight.w700)),
+        ]),
+        const SizedBox(height: 12),
+        if (selectedTasks.isEmpty)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(22),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: AppTheme.border)),
+            child: Column(children: [
+              Icon(Icons.event_available_outlined, size: 30, color: primary),
+              const SizedBox(height: 10),
+              const Text('No task scheduled for this day.',
+                style: TextStyle(fontWeight: FontWeight.w600)),
+              const SizedBox(height: 4),
+              const Text('Tap + to add a task for the selected date.',
+                style: TextStyle(fontSize: 12, color: AppTheme.muted)),
+            ]),
+          )
+        else
+          ...selectedTasks.map((task) => _calendarTaskCard(task, primary)),
+      ],
+    );
+  }
+
+  Widget _calendarGrid(Color primary) {
+    final first = DateTime(_visibleCalendarMonth.year, _visibleCalendarMonth.month, 1);
+    final daysInMonth = DateTime(_visibleCalendarMonth.year, _visibleCalendarMonth.month + 1, 0).day;
+    final leading = first.weekday - 1;
+    final totalCells = ((leading + daysInMonth + 6) ~/ 7) * 7;
+
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: totalCells,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 7,
+        mainAxisSpacing: 6,
+        crossAxisSpacing: 4,
+        childAspectRatio: 0.82),
+      itemBuilder: (context, index) {
+        final dayNumber = index - leading + 1;
+        if (dayNumber < 1 || dayNumber > daysInMonth) {
+          return const SizedBox.shrink();
+        }
+
+        final day = DateTime(_visibleCalendarMonth.year, _visibleCalendarMonth.month, dayNumber);
+        final selected = _sameDay(day, _selectedCalendarDay);
+        final today = _sameDay(day, DateTime.now());
+        final tasks = widget.tasks.where((t) => _sameDay(t.dueAt, day)).toList();
+        final hasPending = tasks.any((t) => !t.completed);
+        final hasCompleted = tasks.any((t) => t.completed);
+
+        return InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: () => setState(() => _selectedCalendarDay = day),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 160),
+            decoration: BoxDecoration(
+              color: selected ? primary : Colors.transparent,
+              borderRadius: BorderRadius.circular(14),
+              border: today && !selected
+                  ? Border.all(color: primary.withValues(alpha: 0.55))
+                  : null),
+            child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+              Text('$dayNumber',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: selected || today ? FontWeight.w700 : FontWeight.w500,
+                  color: selected ? Colors.white : AppTheme.ink)),
+              const SizedBox(height: 5),
+              Row(mainAxisSize: MainAxisSize.min, children: [
+                if (hasPending)
+                  Container(
+                    width: 5, height: 5,
+                    decoration: BoxDecoration(
+                      color: selected ? Colors.white : primary,
+                      shape: BoxShape.circle)),
+                if (hasPending && hasCompleted) const SizedBox(width: 3),
+                if (hasCompleted)
+                  Container(
+                    width: 5, height: 5,
+                    decoration: BoxDecoration(
+                      color: selected ? Colors.white70 : const Color(0xFF4F8B6F),
+                      shape: BoxShape.circle)),
+              ]),
+            ]),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _calendarTaskCard(TaskItem task, Color primary) {
+    final priorityColor = switch (task.priority) {
+      'High' => const Color(0xFFB42318),
+      'Medium' => const Color(0xFF946200),
+      'Low' => const Color(0xFF187442),
+      _ => AppTheme.muted,
+    };
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.fromLTRB(16, 14, 8, 14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppTheme.border)),
+      child: Row(children: [
+        Container(
+          width: 4,
+          height: 50,
+          decoration: BoxDecoration(
+            color: priorityColor,
+            borderRadius: BorderRadius.circular(4))),
+        const SizedBox(width: 12),
+        Expanded(child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(task.title,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                decoration: task.completed ? TextDecoration.lineThrough : null,
+                color: task.completed ? AppTheme.muted : AppTheme.ink)),
+            const SizedBox(height: 6),
+            Row(children: [
+              Icon(Icons.schedule_rounded, size: 15, color: primary),
+              const SizedBox(width: 5),
+              Text(DateFormat('h:mm a').format(task.dueAt),
+                style: const TextStyle(fontSize: 12, color: AppTheme.muted)),
+              const SizedBox(width: 10),
+              Flexible(child: Text(task.category,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 11, color: AppTheme.muted))),
+            ]),
+          ],
+        )),
+        IconButton(
+          tooltip: 'Edit task',
+          onPressed: () => _editTask(task),
+          icon: Icon(Icons.edit_outlined, size: 20, color: primary)),
+        IconButton(
+          tooltip: 'Delete task',
+          onPressed: () => _confirmDelete(task),
+          icon: const Icon(Icons.delete_outline_rounded,
+            size: 20, color: Color(0xFFB42318))),
+      ]),
+    );
+  }
+
+  void _changeCalendarMonth(int delta) {
+    final next = DateTime(
+      _visibleCalendarMonth.year,
+      _visibleCalendarMonth.month + delta,
+    );
+    setState(() {
+      _visibleCalendarMonth = next;
+      _selectedCalendarDay = DateTime(next.year, next.month, 1);
+    });
+  }
+
+  Future<void> _editTask(TaskItem task) async {
+    final updated = await Navigator.push<TaskItem>(
+      context,
+      MaterialPageRoute(builder: (_) => AddTaskScreen(existingTask: task)),
+    );
+    if (updated != null) await widget.onUpdate(updated);
+  }
+
+  Future<void> _confirmDelete(TaskItem task) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Delete task?'),
+        content: Text('Delete “${task.title}”? This cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel')),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Delete')),
+        ],
+      ),
+    );
+    if (confirmed == true) await widget.onDelete(task);
   }
 
   Future<void> _addTask() async {
@@ -305,4 +602,18 @@ class _PlannerIllustration extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _PlannerIllustration oldDelegate) => primary != oldDelegate.primary;
+}
+
+class _Weekday extends StatelessWidget {
+  final String label;
+  const _Weekday(this.label);
+
+  @override
+  Widget build(BuildContext context) => Expanded(
+    child: Center(
+      child: Text(label,
+        style: const TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          color: AppTheme.muted))));
 }

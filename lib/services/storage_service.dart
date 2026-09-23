@@ -23,6 +23,12 @@ class StorageService {
     );
   }
 
+  Future<String> loadTitle() async =>
+      await _prefs.getString('shan_reminder_title') ?? 'ShanReminder';
+
+  Future<void> saveTitle(String title) =>
+      _prefs.setString('shan_reminder_title', title);
+
   Future<String> loadTheme() async =>
       await _prefs.getString(_themeKey) ?? 'Maroon';
 
