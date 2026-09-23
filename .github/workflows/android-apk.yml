@@ -25,14 +25,14 @@ jobs:
         run: flutter --version
 
       - name: Restore persistent ShanReminder signing key
-        id: signing-cache
+        id: signing_cache
         uses: actions/cache@v5
         with:
           path: ~/.android/shanreminder-release.jks
           key: shanreminder-release-signing-v1
 
       - name: Create signing key on first v1.5 build
-        if: steps.signing-cache.outputs.cache-hit != 'true'
+        if: ${{ steps.signing_cache.outputs['cache-hit'] != 'true' }}
         run: |
           mkdir -p ~/.android
           keytool -genkeypair -v \
