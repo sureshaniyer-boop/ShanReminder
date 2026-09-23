@@ -23,9 +23,9 @@ class SettingsScreen extends StatelessWidget {
     try {
       await action();
       if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
-    } catch (_) {
-      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Could not complete this action. Check permissions and try again.')));
+    } catch (e) {
+      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Could not complete this action. ${e.toString().replaceFirst('Bad state: ', '')}')));
     }
   }
 
@@ -39,11 +39,12 @@ class SettingsScreen extends StatelessWidget {
     const SizedBox(height: 24),
     Text('Reminders', style: Theme.of(context).textTheme.titleLarge),
     const SizedBox(height: 8),
-    const Text('Alerts use your default notification tone and vibration. Allow banners and lock-screen notifications in phone settings. Silent mode, Do Not Disturb and phone settings can silence alerts.'),
+    const Text('Alerts use your device notification tone and vibration. Allow banners and lock-screen notifications. On phones with a “Silent notification” switch, keep it OFF for ShanReminder if you want sound and vibration.'),
     Card(child: ListTile(leading: const Icon(Icons.notifications_active_outlined),
       title: const Text('Test sound & vibration'),
       subtitle: const Text('Send a test notification now'),
-      onTap: () => _run(context, NotificationService.instance.testAlert, 'Test alert sent'))),
+      onTap: () => _run(context, NotificationService.instance.testAlert,
+        'Test alert sent. If it was silent, turn OFF Silent notification in phone settings.'))),
     Card(child: ListTile(leading: const Icon(Icons.alarm),
       title: const Text('Allow reminder permissions'),
       onTap: () => _run(context, NotificationService.instance.requestPermissions,
