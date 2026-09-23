@@ -39,7 +39,7 @@ class SettingsScreen extends StatelessWidget {
     const SizedBox(height: 24),
     Text('Reminders', style: Theme.of(context).textTheme.titleLarge),
     const SizedBox(height: 8),
-    const Text('Alerts use your device notification tone and vibration. Allow banners and lock-screen notifications. On phones with a “Silent notification” switch, keep it OFF for ShanReminder if you want sound and vibration.'),
+    const Text('Alerts use your device notification tone and vibration. Allow banners and lock-screen notifications. On phones with a “Silent notification” switch, keep it OFF. For reliable locked-screen reminders, also allow ShanReminder to run in the background / use unrestricted battery where your phone provides that option.'),
     Card(child: ListTile(leading: const Icon(Icons.notifications_active_outlined),
       title: const Text('Test sound & vibration'),
       subtitle: const Text('Send a test notification now'),
