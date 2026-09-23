@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import '../models/task.dart';
 
 class AddTaskScreen extends StatefulWidget {
-  const AddTaskScreen({super.key});
+  final TaskItem? existingTask;
+  const AddTaskScreen({super.key, this.existingTask});
 
   @override
   State<AddTaskScreen> createState() => _AddTaskScreenState();
@@ -10,14 +11,30 @@ class AddTaskScreen extends StatefulWidget {
 
 class _AddTaskScreenState extends State<AddTaskScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _title = TextEditingController();
-  final _description = TextEditingController();
-  DateTime _date = DateTime.now();
-  TimeOfDay _time = TimeOfDay.now();
-  int _reminder = 0;
-  String _repeat = 'None';
-  String _priority = 'Medium';
-  String _category = 'Work';
+  late final TextEditingController _title;
+  late final TextEditingController _description;
+  late DateTime _date;
+  late TimeOfDay _time;
+  late int _reminder;
+  late String _repeat;
+  late String _priority;
+  late String _category;
+
+  bool get _isEditing => widget.existingTask != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final task = widget.existingTask;
+    _title = TextEditingController(text: task?.title ?? '');
+    _description = TextEditingController(text: task?.description ?? '');
+    _date = task?.dueAt ?? DateTime.now();
+    _time = TimeOfDay.fromDateTime(task?.dueAt ?? DateTime.now().add(const Duration(minutes: 5)));
+    _reminder = task?.reminderMinutesBefore ?? 0;
+    _repeat = task?.repeat ?? 'None';
+    _priority = task?.priority ?? 'Medium';
+    _category = task?.category ?? 'Work';
+  }
 
   @override
   void dispose() {
@@ -29,7 +46,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   Future<void> _pickDate() async {
     final result = await showDatePicker(
       context: context,
-      firstDate: DateTime.now().subtract(const Duration(days: 1)),
+      firstDate: DateTime.now().subtract(const Duration(days: 3650)),
       lastDate: DateTime.now().add(const Duration(days: 3650)),
       initialDate: _date,
     );
@@ -44,13 +61,17 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   void _save() {
     if (!_formKey.currentState!.validate()) return;
     final dueAt = DateTime(_date.year, _date.month, _date.day, _time.hour, _time.minute);
-    if (!dueAt.subtract(Duration(minutes: _reminder)).isAfter(DateTime.now())) {
+    final reminderAt = dueAt.subtract(Duration(minutes: _reminder));
+
+    if (reminderAt.isBefore(DateTime.now()) && !_isEditing) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Choose a reminder time in the future, or select At task time.')));
+        content: Text('Choose a task/reminder time in the future.')));
       return;
     }
+
+    final old = widget.existingTask;
     final task = TaskItem(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
+      id: old?.id ?? DateTime.now().microsecondsSinceEpoch.toString(),
       title: _title.text.trim(),
       description: _description.text.trim(),
       dueAt: dueAt,
@@ -58,16 +79,18 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
       repeat: _repeat,
       priority: _priority,
       category: _category,
-      completed: false,
+      completed: old?.completed ?? false,
     );
     Navigator.pop(context, task);
   }
 
   @override
   Widget build(BuildContext context) {
+    final title = _isEditing ? 'Edit Task' : 'Add Task';
     return Scaffold(
-      appBar: AppBar(title: const Text('Add Task'), actions: [
-        TextButton(onPressed: _save, child: const Text('Save', style: TextStyle(color: Colors.white))),
+      appBar: AppBar(title: Text(title), actions: [
+        TextButton(onPressed: _save,
+          child: const Text('Save', style: TextStyle(color: Colors.white))),
       ]),
       body: Form(
         key: _formKey,
@@ -88,9 +111,15 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
             ),
             const SizedBox(height: 14),
             Row(children: [
-              Expanded(child: OutlinedButton.icon(onPressed: _pickDate, icon: const Icon(Icons.calendar_month), label: Text('${_date.day}/${_date.month}/${_date.year}'))),
+              Expanded(child: OutlinedButton.icon(
+                onPressed: _pickDate,
+                icon: const Icon(Icons.calendar_month),
+                label: Text('${_date.day}/${_date.month}/${_date.year}'))),
               const SizedBox(width: 10),
-              Expanded(child: OutlinedButton.icon(onPressed: _pickTime, icon: const Icon(Icons.access_time), label: Text(_time.format(context)))),
+              Expanded(child: OutlinedButton.icon(
+                onPressed: _pickTime,
+                icon: const Icon(Icons.access_time),
+                label: Text(_time.format(context)))),
             ]),
             const SizedBox(height: 14),
             DropdownButtonFormField<int>(
@@ -102,13 +131,14 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                 DropdownMenuItem(value: 30, child: Text('30 minutes before')),
                 DropdownMenuItem(value: 60, child: Text('1 hour before')),
               ],
-              onChanged: (v) => setState(() => _reminder = v ?? 10),
+              onChanged: (v) => setState(() => _reminder = v ?? 0),
             ),
             const SizedBox(height: 14),
             DropdownButtonFormField<String>(
               value: _repeat,
               decoration: const InputDecoration(labelText: 'Repeat'),
-              items: ['None', 'Daily', 'Weekly', 'Monthly'].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+              items: ['None', 'Daily', 'Weekly', 'Monthly']
+                  .map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
               onChanged: (v) => setState(() => _repeat = v ?? 'None'),
             ),
             const SizedBox(height: 18),
@@ -132,7 +162,12 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
               onChanged: (v) => setState(() => _category = v ?? 'Work'),
             ),
             const SizedBox(height: 24),
-            FilledButton.icon(onPressed: _save, icon: const Icon(Icons.notifications_active), label: const Padding(padding: EdgeInsets.symmetric(vertical: 14), child: Text('Save Task & Reminder'))),
+            FilledButton.icon(
+              onPressed: _save,
+              icon: Icon(_isEditing ? Icons.save_outlined : Icons.notifications_active),
+              label: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                child: Text(_isEditing ? 'Save Changes' : 'Save Task & Reminder'))),
           ],
         ),
       ),
