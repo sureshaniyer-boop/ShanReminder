@@ -71,16 +71,7 @@ jobs:
           # instead of Android reporting an incompatible package signature.
           android = text
           marker = "android {\\n"
-          signing = """android {
-    signingConfigs {
-        create("shanRelease") {
-            storeFile = file(System.getProperty("user.home") + "/.android/shanreminder-release.jks")
-            storePassword = "ShanReminderLocal2026"
-            keyAlias = "shanreminder"
-            keyPassword = "ShanReminderLocal2026"
-        }
-    }
-"""
+          signing = "android {\\n    signingConfigs {\\n        create(\\\"shanRelease\\\") {\\n            storeFile = file(System.getProperty(\\\"user.home\\\") + \\"/.android/shanreminder-release.jks\\")\\n            storePassword = \\"ShanReminderLocal2026\\"\\n            keyAlias = \\"shanreminder\\"\\n            keyPassword = \\"ShanReminderLocal2026\\"\\n        }\\n    }\\n"
           android = android.replace(marker, signing, 1)
           android = android.replace(
               "signingConfig = signingConfigs.getByName(\"debug\")",
