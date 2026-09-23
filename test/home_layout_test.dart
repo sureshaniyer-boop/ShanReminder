@@ -50,7 +50,7 @@ void main() {
             textScaler: TextScaler.linear(scale), padding: const EdgeInsets.only(top: 24)),
           child: child!),
         home: HomeScreen(tasks: tasks, themeName: theme,
-          onAdd: (_) async {}, onToggle: (_, _) async {},
+          onAdd: (_) async {}, onToggle: (_, _) async {}, onUpdate: (_) async {},
           onDelete: (_) async {}, onThemeChanged: (_) {}),
       ),
     ));
