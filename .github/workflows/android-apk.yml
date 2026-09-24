@@ -24,12 +24,6 @@ jobs:
       - name: Show Flutter version
         run: flutter --version
 
-      - name: Restore ShanReminder signing identity
-        uses: actions/cache@v4
-        with:
-          path: ~/.android/debug.keystore
-          key: shanreminder-android-signing-v1
-
       - name: Create Android project shell
         run: |
           mkdir -p /tmp/shan_source
@@ -110,17 +104,25 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-      - name: Prepare stable release signing
+      - name: Validate stable signing secrets
+        env:
+          SHAN_KEYSTORE_B64: ${{ secrets.SHAN_KEYSTORE_B64 }}
+          SHAN_KEYSTORE_PASSWORD: ${{ secrets.SHAN_KEYSTORE_PASSWORD }}
+          SHAN_KEY_ALIAS: ${{ secrets.SHAN_KEY_ALIAS }}
+          SHAN_KEY_PASSWORD: ${{ secrets.SHAN_KEY_PASSWORD }}
+        run: |
+          test -n "$SHAN_KEYSTORE_B64" || (echo "Missing SHAN_KEYSTORE_B64" && exit 1)
+          test -n "$SHAN_KEYSTORE_PASSWORD" || (echo "Missing SHAN_KEYSTORE_PASSWORD" && exit 1)
+          test -n "$SHAN_KEY_ALIAS" || (echo "Missing SHAN_KEY_ALIAS" && exit 1)
+          test -n "$SHAN_KEY_PASSWORD" || (echo "Missing SHAN_KEY_PASSWORD" && exit 1)
+
+      - name: Prepare permanent release signing
         working-directory: build_app
         env:
           SHAN_KEYSTORE_B64: ${{ secrets.SHAN_KEYSTORE_B64 }}
         run: |
-          if [ -n "$SHAN_KEYSTORE_B64" ]; then
-            printf '%s' "$SHAN_KEYSTORE_B64" | base64 --decode > android/app/shan-release.p12
-            echo "Stable signing keystore prepared."
-          else
-            echo "No stable signing key configured; build will use Flutter debug signing."
-          fi
+          printf '%s' "$SHAN_KEYSTORE_B64" | base64 --decode > android/app/shan-release.p12
+          echo "Permanent ShanReminder release signing keystore prepared."
 
       - name: Build release APK
         working-directory: build_app
@@ -133,7 +135,7 @@ jobs:
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ShanReminder-v1.6-Android-APK
+          name: ShanReminder-v1.6.1-Android-APK
           path: build_app/build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
           retention-days: 30
