@@ -1,6 +1,7 @@
 name: Build Android APK
 
 on:
+  pull_request:
   workflow_dispatch:
   push:
     branches: [ main ]
@@ -27,12 +28,14 @@ jobs:
         run: |
           mkdir -p /tmp/shan_source
           cp -R lib /tmp/shan_source/lib
+          cp -R assets /tmp/shan_source/assets
           cp pubspec.yaml /tmp/shan_source/pubspec.yaml
           cp android/app/src/main/AndroidManifest.xml /tmp/shan_source/AndroidManifest.xml
           flutter create --platforms=android --org com.shanreminder --project-name shan_reminder build_app
           rm -rf build_app/lib
           rm -rf build_app/test
           cp -R /tmp/shan_source/lib build_app/lib
+          cp -R /tmp/shan_source/assets build_app/assets
           cp -R test build_app/test
           cp /tmp/shan_source/pubspec.yaml build_app/pubspec.yaml
           cp /tmp/shan_source/AndroidManifest.xml build_app/android/app/src/main/AndroidManifest.xml
@@ -47,12 +50,43 @@ jobs:
           )
           if 'coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")' not in text:
               text += '\n\ndependencies {\n    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")\n}\n'
+          release_cfg = '''
+          val shanReleaseKeystore = file("shan-release.p12")
+
+          android.signingConfigs {
+              if (shanReleaseKeystore.exists()) {
+                  create("shanRelease") {
+                      storeFile = shanReleaseKeystore
+                      storePassword = System.getenv("SHAN_KEYSTORE_PASSWORD")
+                      keyAlias = System.getenv("SHAN_KEY_ALIAS")
+                      keyPassword = System.getenv("SHAN_KEY_PASSWORD")
+                      storeType = "PKCS12"
+                  }
+              }
+          }
+          '''
+          if 'val shanReleaseKeystore = file("shan-release.p12")' not in text:
+              text = text.replace('android {\n', release_cfg + '\nandroid {\n', 1)
+          text = text.replace(
+              'signingConfig = signingConfigs.getByName("debug")',
+              'signingConfig = if (shanReleaseKeystore.exists()) signingConfigs.getByName("shanRelease") else signingConfigs.getByName("debug")',
+          )
           p.write_text(text)
           PY
+
+      - name: Render ShanReminder v1.6 launcher icon
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y librsvg2-bin
+          rsvg-convert -w 1024 -h 1024 build_app/assets/shanreminder_v16_icon.svg -o build_app/assets/shanreminder_v16_icon.png
 
       - name: Install dependencies
         working-directory: build_app
         run: flutter pub get
+
+      - name: Generate Android launcher icons
+        working-directory: build_app
+        run: dart run flutter_launcher_icons
 
       - name: Analyze
         working-directory: build_app
@@ -70,14 +104,38 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
+      - name: Validate stable signing secrets
+        env:
+          SHAN_KEYSTORE_B64: ${{ secrets.SHAN_KEYSTORE_B64 }}
+          SHAN_KEYSTORE_PASSWORD: ${{ secrets.SHAN_KEYSTORE_PASSWORD }}
+          SHAN_KEY_ALIAS: ${{ secrets.SHAN_KEY_ALIAS }}
+          SHAN_KEY_PASSWORD: ${{ secrets.SHAN_KEY_PASSWORD }}
+        run: |
+          test -n "$SHAN_KEYSTORE_B64" || (echo "Missing SHAN_KEYSTORE_B64" && exit 1)
+          test -n "$SHAN_KEYSTORE_PASSWORD" || (echo "Missing SHAN_KEYSTORE_PASSWORD" && exit 1)
+          test -n "$SHAN_KEY_ALIAS" || (echo "Missing SHAN_KEY_ALIAS" && exit 1)
+          test -n "$SHAN_KEY_PASSWORD" || (echo "Missing SHAN_KEY_PASSWORD" && exit 1)
+
+      - name: Prepare permanent release signing
+        working-directory: build_app
+        env:
+          SHAN_KEYSTORE_B64: ${{ secrets.SHAN_KEYSTORE_B64 }}
+        run: |
+          printf '%s' "$SHAN_KEYSTORE_B64" | base64 --decode > android/app/shan-release.p12
+          echo "Permanent ShanReminder release signing keystore prepared."
+
       - name: Build release APK
         working-directory: build_app
+        env:
+          SHAN_KEYSTORE_PASSWORD: ${{ secrets.SHAN_KEYSTORE_PASSWORD }}
+          SHAN_KEY_ALIAS: ${{ secrets.SHAN_KEY_ALIAS }}
+          SHAN_KEY_PASSWORD: ${{ secrets.SHAN_KEY_PASSWORD }}
         run: flutter build apk --release
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ShanReminder-v1.2-Android-APK
+          name: ShanReminder-v1.6.1-Android-APK
           path: build_app/build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
           retention-days: 30

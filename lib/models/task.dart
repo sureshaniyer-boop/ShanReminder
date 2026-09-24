@@ -21,15 +21,24 @@ class TaskItem {
     required this.completed,
   });
 
-  TaskItem copyWith({bool? completed}) => TaskItem(
+  TaskItem copyWith({
+    String? title,
+    String? description,
+    DateTime? dueAt,
+    int? reminderMinutesBefore,
+    String? repeat,
+    String? priority,
+    String? category,
+    bool? completed,
+  }) => TaskItem(
         id: id,
-        title: title,
-        description: description,
-        dueAt: dueAt,
-        reminderMinutesBefore: reminderMinutesBefore,
-        repeat: repeat,
-        priority: priority,
-        category: category,
+        title: title ?? this.title,
+        description: description ?? this.description,
+        dueAt: dueAt ?? this.dueAt,
+        reminderMinutesBefore: reminderMinutesBefore ?? this.reminderMinutesBefore,
+        repeat: repeat ?? this.repeat,
+        priority: priority ?? this.priority,
+        category: category ?? this.category,
         completed: completed ?? this.completed,
       );
 
