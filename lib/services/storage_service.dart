@@ -6,6 +6,7 @@ class StorageService {
   static const _tasksKey = 'shan_reminder_tasks';
   static const _themeKey = 'shan_reminder_theme';
   static const _symbolKey = 'shan_reminder_preference_symbol';
+  static const _titleKey = 'shan_reminder_title';
   final SharedPreferencesAsync _prefs = SharedPreferencesAsync();
 
   Future<List<TaskItem>> loadTasks() async {
@@ -37,4 +38,13 @@ class StorageService {
   Future<void> savePreferenceSymbol(String symbolName) async {
     await _prefs.setString(_symbolKey, symbolName);
   }
+
+  Future<String> loadTitle() async =>
+      await _prefs.getString(_titleKey) ?? 'ShanReminder';
+
+  Future<void> saveTitle(String title) async {
+    final cleaned = title.trim();
+    await _prefs.setString(_titleKey, cleaned.isEmpty ? 'ShanReminder' : cleaned);
+  }
 }
+
