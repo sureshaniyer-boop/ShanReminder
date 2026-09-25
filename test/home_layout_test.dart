@@ -51,9 +51,10 @@ void main() {
           child: child!),
         home: HomeScreen(tasks: tasks, themeName: theme,
           preferenceSymbol: PreferenceSymbol.lotus,
+          appTitle: 'ShanReminder',
           onAdd: (_) async {}, onToggle: (_, _) async {},
           onDelete: (_) async {}, onThemeChanged: (_) {},
-          onPreferenceSymbolChanged: (_) {}),
+          onPreferenceSymbolChanged: (_) {}, onTitleChanged: (_) {}),
       ),
     ));
     await tester.pumpAndSettle();
