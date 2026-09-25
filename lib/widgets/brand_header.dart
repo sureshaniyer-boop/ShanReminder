@@ -6,12 +6,14 @@ import 'symbol_mark.dart';
 class BrandHeader extends StatelessWidget {
   final String themeName;
   final PreferenceSymbol preferenceSymbol;
+  final String appTitle;
   final VoidCallback onSettings;
 
   const BrandHeader({
     super.key,
     required this.themeName,
     required this.preferenceSymbol,
+    required this.appTitle,
     required this.onSettings,
   });
 
@@ -67,7 +69,7 @@ class BrandHeader extends StatelessWidget {
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
-                            'ShanReminder',
+                            appTitle,
                             style: TextStyle(
                               fontFamily: 'Roboto',
                               fontSize: 18,
