@@ -23,6 +23,7 @@ class _ShanReminderAppState extends State<ShanReminderApp> {
   List<TaskItem> _tasks = [];
   String _themeName = 'Maroon';
   PreferenceSymbol _preferenceSymbol = PreferenceSymbol.lotus;
+  String _appTitle = 'ShanReminder';
   bool _ready = false;
 
   @override
@@ -42,11 +43,13 @@ class _ShanReminderAppState extends State<ShanReminderApp> {
       final tasks = await _storage.loadTasks();
       final theme = await _storage.loadTheme();
       final symbolValue = await _storage.loadPreferenceSymbol();
+      final appTitle = await _storage.loadTitle();
       if (!mounted) return;
       setState(() {
         _tasks = tasks;
         _themeName = theme;
         _preferenceSymbol = PreferenceSymbol.fromStorage(symbolValue);
+        _appTitle = appTitle;
         _ready = true;
       });
     } catch (e) {
@@ -105,6 +108,14 @@ class _ShanReminderAppState extends State<ShanReminderApp> {
     });
   }
 
+  void _changeTitle(String title) {
+    final cleaned = title.trim().isEmpty ? 'ShanReminder' : title.trim();
+    setState(() => _appTitle = cleaned);
+    _storage.saveTitle(cleaned).catchError((e) {
+      debugPrint('Title save failed: $e');
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -128,11 +139,13 @@ class _ShanReminderAppState extends State<ShanReminderApp> {
               tasks: _tasks,
               themeName: _themeName,
               preferenceSymbol: _preferenceSymbol,
+              appTitle: _appTitle,
               onAdd: _add,
               onToggle: _toggle,
               onDelete: _delete,
               onThemeChanged: _changeTheme,
               onPreferenceSymbolChanged: _changePreferenceSymbol,
+              onTitleChanged: _changeTitle,
             ),
     );
   }
