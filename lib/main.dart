@@ -4,6 +4,7 @@ import 'screens/home_screen.dart';
 import 'services/notification_service.dart';
 import 'services/storage_service.dart';
 import 'theme/app_theme.dart';
+import 'widgets/symbol_mark.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,6 +22,7 @@ class _ShanReminderAppState extends State<ShanReminderApp> {
   final StorageService _storage = StorageService();
   List<TaskItem> _tasks = [];
   String _themeName = 'Maroon';
+  PreferenceSymbol _preferenceSymbol = PreferenceSymbol.lotus;
   bool _ready = false;
 
   @override
@@ -30,8 +32,6 @@ class _ShanReminderAppState extends State<ShanReminderApp> {
   }
 
   Future<void> _startup() async {
-    // Always allow the UI to start. Notification/plugin failures must never
-    // prevent ShanReminder from opening.
     try {
       await NotificationService.instance.initialize();
     } catch (e) {
@@ -41,10 +41,12 @@ class _ShanReminderAppState extends State<ShanReminderApp> {
     try {
       final tasks = await _storage.loadTasks();
       final theme = await _storage.loadTheme();
+      final symbolValue = await _storage.loadPreferenceSymbol();
       if (!mounted) return;
       setState(() {
         _tasks = tasks;
         _themeName = theme;
+        _preferenceSymbol = PreferenceSymbol.fromStorage(symbolValue);
         _ready = true;
       });
     } catch (e) {
@@ -96,6 +98,13 @@ class _ShanReminderAppState extends State<ShanReminderApp> {
     });
   }
 
+  void _changePreferenceSymbol(PreferenceSymbol symbol) {
+    setState(() => _preferenceSymbol = symbol);
+    _storage.savePreferenceSymbol(symbol.storageValue).catchError((e) {
+      debugPrint('Preference symbol save failed: $e');
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -118,10 +127,12 @@ class _ShanReminderAppState extends State<ShanReminderApp> {
           : HomeScreen(
               tasks: _tasks,
               themeName: _themeName,
+              preferenceSymbol: _preferenceSymbol,
               onAdd: _add,
               onToggle: _toggle,
               onDelete: _delete,
               onThemeChanged: _changeTheme,
+              onPreferenceSymbolChanged: _changePreferenceSymbol,
             ),
     );
   }
