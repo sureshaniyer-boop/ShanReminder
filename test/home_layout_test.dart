@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shan_reminder/models/task.dart';
 import 'package:shan_reminder/screens/home_screen.dart';
 import 'package:shan_reminder/theme/app_theme.dart';
+import 'package:shan_reminder/widgets/symbol_mark.dart';
 
 void main() {
   setUpAll(() async {
@@ -49,8 +50,10 @@ void main() {
             textScaler: TextScaler.linear(scale), padding: const EdgeInsets.only(top: 24)),
           child: child!),
         home: HomeScreen(tasks: tasks, themeName: theme,
+          preferenceSymbol: PreferenceSymbol.lotus,
           onAdd: (_) async {}, onToggle: (_, _) async {},
-          onDelete: (_) async {}, onThemeChanged: (_) {}),
+          onDelete: (_) async {}, onThemeChanged: (_) {},
+          onPreferenceSymbolChanged: (_) {}),
       ),
     ));
     await tester.pumpAndSettle();
