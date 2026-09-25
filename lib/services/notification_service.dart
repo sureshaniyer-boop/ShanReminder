@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
@@ -34,6 +35,76 @@ class NotificationService {
       await _plugin
           .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()
           ?.requestPermissions(alert: true, badge: true, sound: true);
+    }
+  }
+
+  Future<bool?> notificationsEnabled() async {
+    if (Platform.isAndroid) {
+      return await _plugin
+          .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>()
+          ?.areNotificationsEnabled();
+    }
+    return true;
+  }
+
+  Future<bool?> canScheduleExactAlarms() async {
+    if (!Platform.isAndroid) return true;
+    return await _plugin
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
+        ?.canScheduleExactNotifications();
+  }
+
+  Future<void> requestPermissions() async {
+    if (Platform.isAndroid) {
+      final androidPlugin = _plugin.resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>();
+      await androidPlugin?.requestNotificationsPermission();
+      await androidPlugin?.requestExactAlarmsPermission();
+    } else if (Platform.isIOS) {
+      await _plugin
+          .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()
+          ?.requestPermissions(alert: true, badge: true, sound: true);
+    }
+  }
+
+  Future<bool> openNotificationSettings() async {
+    return await _plugin.openAppNotificationSettings() ?? false;
+  }
+
+  Future<void> testSoundAndVibration() async {
+    final details = NotificationDetails(
+      android: AndroidNotificationDetails(
+        'shan_reminders',
+        'ShanReminder Alerts',
+        channelDescription: 'Task and event reminder alerts',
+        importance: Importance.max,
+        priority: Priority.high,
+        playSound: true,
+        enableVibration: true,
+        vibrationPattern: Int64List.fromList([0, 450, 180, 450]),
+      ),
+      iOS: const DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      ),
+    );
+
+    await _plugin.show(
+      id: 98173,
+      title: 'ShanReminder',
+      body: 'Sound and vibration are working when you hear and feel this alert.',
+      notificationDetails: details,
+    );
+  }
+
+  Future<void> refreshScheduledReminders(List<TaskItem> tasks) async {
+    for (final task in tasks) {
+      if (!task.completed) {
+        await schedule(task);
+      }
     }
   }
 

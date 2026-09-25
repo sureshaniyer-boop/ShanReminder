@@ -12,22 +12,26 @@ class HomeScreen extends StatefulWidget {
   final List<TaskItem> tasks;
   final String themeName;
   final PreferenceSymbol preferenceSymbol;
+  final String appTitle;
   final Future<void> Function(TaskItem task) onAdd;
   final Future<void> Function(TaskItem task, bool completed) onToggle;
   final Future<void> Function(TaskItem task) onDelete;
   final ValueChanged<String> onThemeChanged;
   final ValueChanged<PreferenceSymbol> onPreferenceSymbolChanged;
+  final ValueChanged<String> onTitleChanged;
 
   const HomeScreen({
     super.key,
     required this.tasks,
     required this.themeName,
     required this.preferenceSymbol,
+    required this.appTitle,
     required this.onAdd,
     required this.onToggle,
     required this.onDelete,
     required this.onThemeChanged,
     required this.onPreferenceSymbolChanged,
+    required this.onTitleChanged,
   });
 
   @override
@@ -45,8 +49,11 @@ class _HomeScreenState extends State<HomeScreen> {
       SettingsScreen(
         themeName: widget.themeName,
         preferenceSymbol: widget.preferenceSymbol,
+        appTitle: widget.appTitle,
+        tasks: widget.tasks,
         onThemeChanged: widget.onThemeChanged,
         onPreferenceSymbolChanged: widget.onPreferenceSymbolChanged,
+        onTitleChanged: widget.onTitleChanged,
       )];
     final todayHasTasks = widget.tasks.any((t) => _sameDay(t.dueAt, DateTime.now()));
     return Scaffold(
@@ -112,6 +119,7 @@ class _HomeScreenState extends State<HomeScreen> {
       BrandHeader(
         themeName: widget.themeName,
         preferenceSymbol: widget.preferenceSymbol,
+        appTitle: widget.appTitle,
         onSettings: () => setState(() => _index = 3),
       ),
       Transform.translate(
