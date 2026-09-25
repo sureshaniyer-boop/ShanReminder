@@ -4,25 +4,30 @@ import '../models/task.dart';
 import '../theme/app_theme.dart';
 import '../widgets/brand_header.dart';
 import '../widgets/task_tile.dart';
+import '../widgets/symbol_mark.dart';
 import 'add_task_screen.dart';
 import 'settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final List<TaskItem> tasks;
   final String themeName;
+  final PreferenceSymbol preferenceSymbol;
   final Future<void> Function(TaskItem task) onAdd;
   final Future<void> Function(TaskItem task, bool completed) onToggle;
   final Future<void> Function(TaskItem task) onDelete;
   final ValueChanged<String> onThemeChanged;
+  final ValueChanged<PreferenceSymbol> onPreferenceSymbolChanged;
 
   const HomeScreen({
     super.key,
     required this.tasks,
     required this.themeName,
+    required this.preferenceSymbol,
     required this.onAdd,
     required this.onToggle,
     required this.onDelete,
     required this.onThemeChanged,
+    required this.onPreferenceSymbolChanged,
   });
 
   @override
@@ -37,7 +42,12 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final pages = [_dashboard(), _calendar(), _allTasks(),
-      SettingsScreen(themeName: widget.themeName, onThemeChanged: widget.onThemeChanged)];
+      SettingsScreen(
+        themeName: widget.themeName,
+        preferenceSymbol: widget.preferenceSymbol,
+        onThemeChanged: widget.onThemeChanged,
+        onPreferenceSymbolChanged: widget.onPreferenceSymbolChanged,
+      )];
     final todayHasTasks = widget.tasks.any((t) => _sameDay(t.dueAt, DateTime.now()));
     return Scaffold(
       appBar: _index == 0 ? null : AppBar(
@@ -99,8 +109,11 @@ class _HomeScreenState extends State<HomeScreen> {
     final overdue = widget.tasks.where((t) => !t.completed && t.dueAt.isBefore(now)).length;
     final primary = Theme.of(context).colorScheme.primary;
     return SingleChildScrollView(child: Column(children: [
-      BrandHeader(themeName: widget.themeName,
-        onSettings: () => setState(() => _index = 3)),
+      BrandHeader(
+        themeName: widget.themeName,
+        preferenceSymbol: widget.preferenceSymbol,
+        onSettings: () => setState(() => _index = 3),
+      ),
       Transform.translate(
         offset: const Offset(0, -24),
         child: Padding(
