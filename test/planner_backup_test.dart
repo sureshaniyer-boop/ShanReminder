@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shan_reminder/backup/backup_data.dart';
@@ -25,6 +28,23 @@ TaskItem task(
 );
 
 void main() {
+  setUpAll(() async {
+    final icons = FontLoader('MaterialIcons')
+      ..addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf'));
+    await icons.load();
+    final root = Platform.environment['FLUTTER_ROOT'];
+    if (root != null) {
+      final font = File(
+        '$root/bin/cache/artifacts/material_fonts/Roboto-Regular.ttf',
+      );
+      if (font.existsSync()) {
+        final loader = FontLoader('Roboto')
+          ..addFont(Future.value(ByteData.sublistView(font.readAsBytesSync())));
+        await loader.load();
+      }
+    }
+  });
+
   test('Calendar windows cross month/year boundaries and use next Monday', () {
     final groups = taskWindows(DateTime(2026, 12, 31, 23, 59));
     expect(groups[0].contains(DateTime(2027)), isFalse);
@@ -122,7 +142,10 @@ void main() {
       );
       await tester.pumpAndSettle();
       for (final label in ['Calendar', 'Tasks', 'Settings']) {
-        await tester.drag(find.byType(PageView), const Offset(-650, 0));
+        await tester.drag(
+          find.byKey(const ValueKey('main-pages')),
+          const Offset(-650, 0),
+        );
         await tester.pumpAndSettle();
         expect(
           find.descendant(of: find.byType(AppBar), matching: find.text(label)),
@@ -130,17 +153,72 @@ void main() {
         );
       }
       for (final label in ['Tasks', 'Calendar']) {
-        await tester.drag(find.byType(PageView), const Offset(650, 0));
+        await tester.drag(
+          find.byKey(const ValueKey('main-pages')),
+          const Offset(650, 0),
+        );
         await tester.pumpAndSettle();
         expect(
           find.descendant(of: find.byType(AppBar), matching: find.text(label)),
           findsOneWidget,
         );
       }
-      await tester.drag(find.byType(PageView), const Offset(650, 0));
+      await tester.drag(
+        find.byKey(const ValueKey('main-pages')),
+        const Offset(650, 0),
+      );
       await tester.pumpAndSettle();
       expect(find.byType(AppBar), findsNothing);
       expect(tester.takeException(), isNull);
     },
   );
+  testWidgets('Planner preview at phone size', (tester) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(412, 915);
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final now = DateTime.now();
+    await tester.pumpWidget(
+      RepaintBoundary(
+        key: const ValueKey('planner-preview'),
+        child: MaterialApp(
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.build('Maroon'),
+          home: HomeScreen(
+            tasks: [
+              task(
+                'today',
+                DateTime(now.year, now.month, now.day, 20),
+                title: 'Prepare client consultation',
+              ),
+              task(
+                'tomorrow',
+                DateTime(now.year, now.month, now.day + 1, 10),
+                title: 'Project progress review',
+              ),
+            ],
+            themeName: 'Maroon',
+            preferenceSymbol: PreferenceSymbol.lotus,
+            appTitle: 'ShanReminder',
+            onAdd: (_) async {},
+            onToggle: (_, _) async {},
+            onDelete: (_) async {},
+            onThemeChanged: (_) {},
+            onPreferenceSymbolChanged: (_) {},
+            onTitleChanged: (_) {},
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Tasks').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('expand-Today')));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    await expectLater(
+      find.byKey(const ValueKey('planner-preview')),
+      matchesGoldenFile('previews/Tasks_Planner.png'),
+    );
+  });
 }
