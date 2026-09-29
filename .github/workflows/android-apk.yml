@@ -3,7 +3,7 @@ name: Build Android APK
 on:
   workflow_dispatch:
   push:
-    branches: [ main ]
+    branches: [ main, feature/v1.7-backup-swipe-planner ]
 
 jobs:
   build-apk:
@@ -58,6 +58,10 @@ jobs:
         working-directory: build_app
         run: flutter analyze --no-fatal-infos
 
+      - name: Test planner and backup behavior
+        working-directory: build_app
+        run: flutter test test/planner_backup_test.dart
+
       - name: Check home layouts and generate previews
         working-directory: build_app
         run: flutter test --update-goldens test/home_layout_test.dart
@@ -72,12 +76,14 @@ jobs:
 
       - name: Build release APK
         working-directory: build_app
-        run: flutter build apk --release
+        run: flutter build apk --release --dart-define=GOOGLE_WEB_CLIENT_ID="$GOOGLE_WEB_CLIENT_ID"
+        env:
+          GOOGLE_WEB_CLIENT_ID: ${{ vars.GOOGLE_WEB_CLIENT_ID }}
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ShanReminder-v1.2-Android-APK
+          name: ShanReminder-v1.7-TEST-APK
           path: build_app/build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
           retention-days: 30
