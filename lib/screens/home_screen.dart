@@ -97,6 +97,7 @@ class _HomeScreenState extends State<HomeScreen> {
         top: _index != 0,
         bottom: false,
         child: PageView(
+          key: const ValueKey('main-pages'),
           controller: _pages,
           onPageChanged: (index) => setState(() => _index = index),
           children: pages,
@@ -550,11 +551,16 @@ class _HomeScreenState extends State<HomeScreen> {
       padding: const EdgeInsets.fromLTRB(18, 18, 18, 100),
       children: [
         Card(
-          child: CalendarDatePicker(
-            initialDate: _selectedDate,
-            firstDate: DateTime(2000),
-            lastDate: DateTime(2100, 12, 31),
-            onDateChanged: (date) => setState(() => _selectedDate = date),
+          child: ScrollConfiguration(
+            behavior: const MaterialScrollBehavior().copyWith(
+              physics: const NeverScrollableScrollPhysics(),
+            ),
+            child: CalendarDatePicker(
+              initialDate: _selectedDate,
+              firstDate: DateTime(2000),
+              lastDate: DateTime(2100, 12, 31),
+              onDateChanged: (date) => setState(() => _selectedDate = date),
+            ),
           ),
         ),
         const SizedBox(height: 20),
