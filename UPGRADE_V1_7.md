@@ -19,7 +19,7 @@ Sources: https://pub.dev/packages/google_sign_in_android and https://developers.
 
 ## Release signing blocker
 
-The current main workflow generates a fresh Android project and uses its debug signing configuration for `flutter build apk --release`. The TEST artifact is not certified as an in-place update. Do not uninstall a data-bearing installation to install it.
+The current main workflow generates a fresh Android project and uses its debug signing configuration for `flutter build apk --release`. The TEST artifact installs separately as ShanReminder Preview (`com.shanreminder.shan_reminder.preview`). It does not update or read the existing app. Keep the original installation and its data. Production signing and package identity must be restored before merging this preview workflow to main.
 
 A production build must use the existing release keystore or the previously prepared permanent signing setup, then compare its certificate with the installed APK. Never commit a keystore or passwords. Existing repository history includes the permanent-signing branch; it must be reconciled before a production release. No claim of in-place compatibility is made by this branch.
 
