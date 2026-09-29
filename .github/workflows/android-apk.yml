@@ -48,11 +48,11 @@ jobs:
           if 'coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")' not in text:
               text += '\n\ndependencies {\n    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")\n}\n'
           text = text.replace('applicationId = "com.shanreminder.shan_reminder"',
-                              'applicationId = "com.shanreminder.shan_reminder.preview"')
+                              'applicationId = "com.shanreminder.shan_reminder.preview.fixed"')
           p.write_text(text)
           manifest = Path("build_app/android/app/src/main/AndroidManifest.xml")
           manifest.write_text(manifest.read_text().replace('android:label="ShanReminder"',
-                                                         'android:label="ShanReminder Preview"'))
+                                                         'android:label="ShanReminder Fixed Preview"'))
           PY
 
       - name: Install dependencies
@@ -88,7 +88,7 @@ jobs:
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ShanReminder-v1.7-TEST-APK
+          name: ShanReminder-v1.7-FIXED-APK
           path: build_app/build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
           retention-days: 30
