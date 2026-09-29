@@ -147,10 +147,7 @@ void main() {
           const Offset(-650, 0),
         );
         await tester.pumpAndSettle();
-        expect(
-          find.descendant(of: find.byType(AppBar), matching: find.text(label)),
-          findsOneWidget,
-        );
+        expect(find.byKey(ValueKey('page-header-$label')), findsOneWidget);
       }
       for (final label in ['Tasks', 'Calendar']) {
         await tester.drag(
@@ -158,10 +155,7 @@ void main() {
           const Offset(650, 0),
         );
         await tester.pumpAndSettle();
-        expect(
-          find.descendant(of: find.byType(AppBar), matching: find.text(label)),
-          findsOneWidget,
-        );
+        expect(find.byKey(ValueKey('page-header-$label')), findsOneWidget);
       }
       await tester.drag(
         find.byKey(const ValueKey('main-pages')),
