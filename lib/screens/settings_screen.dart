@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+
 import '../models/task.dart';
 import '../services/notification_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/symbol_mark.dart';
 
 class SettingsScreen extends StatefulWidget {
+  final Widget? backupPanel;
   final String themeName;
   final PreferenceSymbol preferenceSymbol;
   final String appTitle;
@@ -15,6 +17,7 @@ class SettingsScreen extends StatefulWidget {
 
   const SettingsScreen({
     super.key,
+    this.backupPanel,
     required this.themeName,
     required this.preferenceSymbol,
     required this.appTitle,
@@ -28,7 +31,10 @@ class SettingsScreen extends StatefulWidget {
   State<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
+class _SettingsScreenState extends State<SettingsScreen>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
   bool _busy = false;
 
   Future<void> _run(
@@ -41,14 +47,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     try {
       await action();
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(success)),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(success)));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$failurePrefix: $e')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('$failurePrefix: $e')));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -67,8 +71,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           decoration: const InputDecoration(
             labelText: 'App title',
             hintText: 'Enter a name',
-            helperText:
-                'Changes the name inside the app. Your phone icon keeps the ShanReminder name.',
+            helperText: 'Changes the name inside the app. Your phone icon keeps the ShanReminder name.',
           ),
           onSubmitted: (value) => Navigator.pop(context, value),
         ),
@@ -91,18 +94,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (cleaned.isEmpty) return;
     widget.onTitleChanged(cleaned);
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Title updated')),
-    );
+    ScaffoldMessenger.of(context)
+        .showSnackBar(const SnackBar(content: Text('Title updated')));
   }
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final primary = Theme.of(context).colorScheme.primary;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(18, 18, 18, 28),
       children: [
+        if (widget.backupPanel != null) ...[
+          widget.backupPanel!,
+          const SizedBox(height: 24),
+        ],
         _heading(
           context,
           'Notifications & Reminders',
@@ -116,23 +123,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
           onTap: _busy
               ? null
               : () => _run(
-                    NotificationService.instance.testSoundAndVibration,
-                    success:
-                        'Sound and vibration test sent. Check your phone notification.',
-                  ),
+                  NotificationService.instance.testSoundAndVibration,
+                  success: 'Sound and vibration test sent. Check your phone notification.',
+                ),
         ),
         _actionTile(
           icon: Icons.alarm_add_outlined,
           title: 'Allow reminder permissions',
-          subtitle:
-              'Request notification and exact alarm permissions for reliable reminders',
+          subtitle: 'Request notification and exact alarm permissions for reliable reminders',
           onTap: _busy
               ? null
               : () => _run(
-                    NotificationService.instance.requestPermissions,
-                    success:
-                        'Permission request completed. Check phone settings if alerts remain disabled.',
-                  ),
+                  NotificationService.instance.requestPermissions,
+                  success: 'Permission request completed. Check phone settings if alerts remain disabled.',
+                ),
         ),
         _actionTile(
           icon: Icons.settings_outlined,
@@ -148,9 +152,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
-                          opened
-                              ? 'Notification settings opened'
-                              : 'Unable to open notification settings on this device.',
+                          opened ? 'Notification settings opened' : 'Unable to open notification settings on this device.',
                         ),
                       ),
                     );
@@ -169,24 +171,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
           onTap: _busy
               ? null
               : () => _run(
-                    () => NotificationService.instance
-                        .refreshScheduledReminders(widget.tasks),
-                    success: 'Upcoming reminders refreshed',
-                    failurePrefix: 'Reminder refresh failed',
+                  () => NotificationService.instance.refreshScheduledReminders(
+                    widget.tasks,
                   ),
+                  success: 'Upcoming reminders refreshed',
+                  failurePrefix: 'Reminder refresh failed',
+                ),
         ),
         const SizedBox(height: 24),
-        _heading(
-          context,
-          'Appearance',
-          'Make ShanReminder feel like yours.',
-        ),
+        _heading(context, 'Appearance', 'Make ShanReminder feel like yours.'),
         const SizedBox(height: 12),
         _sectionCard(
           context,
           title: 'App title',
-          subtitle:
-              'Personalize the name shown inside ShanReminder. The launcher icon name remains ShanReminder.',
+          subtitle: 'Personalize the name shown inside ShanReminder. The launcher icon name remains ShanReminder.',
           child: ListTile(
             contentPadding: EdgeInsets.zero,
             leading: CircleAvatar(
@@ -206,8 +204,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _sectionCard(
           context,
           title: 'Theme Color Selection',
-          subtitle:
-              'Gold remains the accent colour. Choose your main template colour.',
+          subtitle: 'Gold remains the accent colour. Choose your main template colour.',
           child: Column(
             children: AppTheme.themeColors.entries.map((entry) {
               final selected = entry.key == widget.themeName;
@@ -244,9 +241,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         Expanded(
                           child: Text(
                             entry.key,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w700,
-                            ),
+                            style: const TextStyle(fontWeight: FontWeight.w700),
                           ),
                         ),
                         CircleAvatar(
@@ -270,8 +265,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _sectionCard(
           context,
           title: 'Your Preference Symbols',
-          subtitle:
-              'Choose a symbol that represents you. Your chosen symbol will appear on the app header and hero background.',
+          subtitle: 'Choose a symbol that represents you. Your chosen symbol will appear on the app header and hero background.',
           child: LayoutBuilder(
             builder: (context, constraints) {
               final itemWidth = constraints.maxWidth < 350
@@ -333,8 +327,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 fontWeight: selected
                                     ? FontWeight.w700
                                     : FontWeight.w600,
-                                color:
-                                    selected ? primary : AppTheme.ink,
+                                color: selected ? primary : AppTheme.ink,
                               ),
                             ),
                           ],
@@ -351,27 +344,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _heading(
-    BuildContext context,
-    String title,
-    String subtitle,
-  ) {
+  Widget _heading(BuildContext context, String title, String subtitle) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           title,
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+          style: Theme.of(context).textTheme.titleLarge
+              ?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 5),
         Text(
           subtitle,
-          style: const TextStyle(
-            color: AppTheme.muted,
-            height: 1.4,
-          ),
+          style: const TextStyle(color: AppTheme.muted, height: 1.4),
         ),
       ],
     );
@@ -387,10 +372,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       margin: const EdgeInsets.only(bottom: 9),
       child: ListTile(
         leading: Icon(icon),
-        title: Text(
-          title,
-          style: const TextStyle(fontWeight: FontWeight.w700),
-        ),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
         subtitle: Text(subtitle),
         trailing: _busy
             ? const SizedBox(
@@ -438,7 +420,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           const SizedBox(height: 13),
-          child,
+          Material(type: MaterialType.transparency, child: child),
         ],
       ),
     );

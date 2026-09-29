@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+
 import 'models/task.dart';
+import 'backup/backup_data.dart';
 import 'screens/home_screen.dart';
 import 'services/notification_service.dart';
 import 'services/storage_service.dart';
@@ -71,7 +73,9 @@ class _ShanReminderAppState extends State<ShanReminderApp> {
 
   Future<void> _toggle(TaskItem task, bool completed) async {
     final updated = task.copyWith(completed: completed);
-    setState(() => _tasks = _tasks.map((t) => t.id == task.id ? updated : t).toList());
+    setState(
+      () => _tasks = _tasks.map((t) => t.id == task.id ? updated : t).toList(),
+    );
     try {
       await _storage.saveTasks(_tasks);
       if (completed) {
@@ -91,6 +95,20 @@ class _ShanReminderAppState extends State<ShanReminderApp> {
       await NotificationService.instance.cancel(task.id);
     } catch (e) {
       debugPrint('Task delete failed: $e');
+    }
+  }
+
+  Future<void> _restore(List<TaskItem> incoming) async {
+    final merged = BackupData.merge(_tasks, incoming);
+    await _storage.saveTasks(merged);
+    if (!mounted) return;
+    setState(() => _tasks = merged);
+    try {
+      await NotificationService.instance.refreshScheduledReminders(merged);
+    } catch (e) {
+      throw StateError(
+        'Tasks were restored, but reminder scheduling failed. Allow alarm permissions and use Refresh scheduled reminders.',
+      );
     }
   }
 
@@ -137,6 +155,7 @@ class _ShanReminderAppState extends State<ShanReminderApp> {
             )
           : HomeScreen(
               tasks: _tasks,
+              onRestore: _restore,
               themeName: _themeName,
               preferenceSymbol: _preferenceSymbol,
               appTitle: _appTitle,
