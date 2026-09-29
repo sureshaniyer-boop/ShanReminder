@@ -126,7 +126,7 @@ void main() {
       150,
       scrollable: find
           .descendant(
-            of: find.byType(SingleChildScrollView).first,
+            of: find.byKey(const PageStorageKey('today-tasks')),
             matching: find.byType(Scrollable),
           )
           .first,
@@ -146,6 +146,33 @@ void main() {
       find.text('No tasks yet. Tap + to create your first reminder.'),
       findsOneWidget,
     );
+    expect(tester.takeException(), isNull);
+  });
+  testWidgets('Dashboard summary stays fixed while tasks scroll', (
+    tester,
+  ) async {
+    await mount(tester, 'Emerald', populated: true);
+    final summary = find.text('YOUR DAY AT A GLANCE');
+    final before = tester.getTopLeft(summary);
+    await tester.drag(
+      find.byKey(const PageStorageKey('today-tasks')),
+      const Offset(0, -200),
+    );
+    await tester.pumpAndSettle();
+    expect(tester.getTopLeft(summary), before);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Calendar marks a date containing tasks', (tester) async {
+    await mount(tester, 'Emerald', populated: true);
+    await tester.tap(find.text('Calendar').last);
+    await tester.pumpAndSettle();
+    final now = DateTime.now();
+    final dot = tester.widget<Container>(
+      find.byKey(ValueKey('calendar-dot-${now.year}-${now.month}-${now.day}')),
+    );
+    final decoration = dot.decoration! as BoxDecoration;
+    expect(decoration.color, isNot(Colors.transparent));
     expect(tester.takeException(), isNull);
   });
 }
