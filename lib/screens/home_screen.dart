@@ -124,6 +124,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Center(
                 child: Text(
                   title,
+                  key: ValueKey('page-header-$title'),
                   style: const TextStyle(
                     color: AppTheme.gold,
                     fontSize: 20,
