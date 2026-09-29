@@ -420,7 +420,7 @@ class _SettingsScreenState extends State<SettingsScreen>
             ),
           ),
           const SizedBox(height: 13),
-          child,
+          Material(type: MaterialType.transparency, child: child),
         ],
       ),
     );
